@@ -7,12 +7,12 @@ type Results struct {
 }
 
 type Data struct {
+	Update  bool   `yaml:"update"`
 	Matches string `yaml:"matches"`
 }
 
-type Batch struct {
-	Results *Results `yaml:"results"`
-	Matches *Matches `yaml:"matches"`
+type Source struct {
+	Url string `yaml:"url"`
 }
 
 type Matches struct {
@@ -24,7 +24,9 @@ type Matches struct {
 }
 
 type Configuration struct {
-	AppPath string `yaml:"appPath"`
-	Data    *Data  `yaml:"data"`
-	Batch   *Batch `yaml:"data"`
+	AppPath string   `yaml:"appPath"`
+	Data    *Data    `yaml:"data"`
+	Source  *Source  `yaml:"source"`
+	Results *Results `yaml:"results"`
+	Matches *Matches `yaml:"matches"`
 }

@@ -5,16 +5,18 @@ import (
 	"github.com/go-rod/rod"
 	"github.com/margostino/anfield/common"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 )
 
-var appConfig = common.GetConfig("./configuration/configuration.yml")
-var config = appConfig.Batch
+var config = common.GetConfig("./configuration/configuration.yml")
 
 func main() {
 	file := openFile()
-	defer file.Close()
+	if file != nil {
+		defer file.Close()
+	}
 	browser := openBrowser()
 	defer browser.MustClose()
 	results := getResults(browser)
@@ -32,10 +34,13 @@ func main() {
 }
 
 func openFile() *os.File {
-	filePath := appConfig.AppPath + appConfig.Data.Matches
-	file, err := os.OpenFile(filePath, os.O_TRUNC|os.O_RDWR|os.O_CREATE, 0644)
-	common.Check(err)
-	return file
+	if config.Data.Update {
+		filePath := config.AppPath + config.Data.Matches
+		file, err := os.OpenFile(filePath, os.O_TRUNC|os.O_RDWR|os.O_CREATE, 0644)
+		common.Check(err)
+		return file
+	}
+	return nil
 }
 
 func openBrowser() *rod.Browser {
@@ -44,7 +49,7 @@ func openBrowser() *rod.Browser {
 }
 
 func getResults(browser *rod.Browser) rod.Elements {
-	resultsPage := browser.MustPage(config.Results.Url)
+	resultsPage := browser.MustPage(config.Source.Url + config.Results.Url)
 	return resultsPage.MustElement(config.Results.Selector).MustElements(config.Results.Pattern)
 }
 
@@ -70,10 +75,20 @@ func getEvents(browser *rod.Browser, eventUrl string) (string, *[]string) {
 }
 
 func save(eventDate string, events *[]string, file *os.File) {
+	var time string
 	for _, event := range *events {
-		line := fmt.Sprintf("%s;%s\n", eventDate, event)
-		fmt.Println(line)
-		_, err := file.WriteString(line)
-		common.Check(err)
+		isTime, _ := regexp.MatchString("([0-9]?'|[0-9]{2}'|[0-9]{2}\\+[0-9]+')$", event)
+
+		if isTime {
+			time = event
+		} else {
+			line := fmt.Sprintf("%s;%s;%s\n", eventDate, time, event)
+			fmt.Println(line)
+			if config.Data.Update {
+				_, err := file.WriteString(line)
+				common.Check(err)
+			}
+			time = ""
+		}
 	}
 }

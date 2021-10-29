@@ -21,7 +21,3 @@ func GetConfig(file string) *Configuration {
 	}
 	return &configuration
 }
-
-func GetBatchConfig(file string) *Batch {
-	return GetConfig(file).Batch
-}
