@@ -6,6 +6,15 @@ type Results struct {
 	Pattern  string `yaml:"pattern"`
 }
 
+type Data struct {
+	Matches string `yaml:"matches"`
+}
+
+type Batch struct {
+	Results *Results `yaml:"results"`
+	Matches *Matches `yaml:"matches"`
+}
+
 type Matches struct {
 	MoreCommentsSelector string `yaml:"moreCommentsSelector"`
 	CommentsSelector     string `yaml:"commentsSelector"`
@@ -15,6 +24,7 @@ type Matches struct {
 }
 
 type Configuration struct {
-	Results *Results `yaml:"results"`
-	Matches *Matches `yaml:"matches"`
+	AppPath string `yaml:"appPath"`
+	Data    *Data  `yaml:"data"`
+	Batch   *Batch `yaml:"data"`
 }
