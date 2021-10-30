@@ -84,11 +84,15 @@ func save(eventDate string, events *[]string, file *os.File) {
 		} else {
 			line := fmt.Sprintf("%s;%s;%s\n", eventDate, time, event)
 			fmt.Println(line)
-			if config.Data.Update {
-				_, err := file.WriteString(line)
-				common.Check(err)
-			}
+			persist(file, line)
 			time = ""
 		}
+	}
+}
+
+func persist(file *os.File, data string) {
+	if config.Data.Update {
+		_, err := file.WriteString(data)
+		common.Check(err)
 	}
 }

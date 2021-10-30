@@ -15,6 +15,10 @@ type Source struct {
 	Url string `yaml:"url"`
 }
 
+type Bot struct {
+	Token string `yaml:"token"`
+}
+
 type Matches struct {
 	MoreCommentsSelector string `yaml:"moreCommentsSelector"`
 	CommentsSelector     string `yaml:"commentsSelector"`
@@ -29,4 +33,5 @@ type Configuration struct {
 	Source  *Source  `yaml:"source"`
 	Results *Results `yaml:"results"`
 	Matches *Matches `yaml:"matches"`
+	Bot     *Bot     `yaml:"bot"`
 }
