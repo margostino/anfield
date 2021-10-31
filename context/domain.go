@@ -1,4 +1,4 @@
-package common
+package context
 
 type Results struct {
 	Url      string `yaml:"url"`
@@ -19,6 +19,10 @@ type Bot struct {
 	Token string `yaml:"token"`
 }
 
+type Realtime struct {
+	Matches []string `yaml:"matches"`
+}
+
 type Matches struct {
 	MoreCommentsSelector string `yaml:"moreCommentsSelector"`
 	CommentsSelector     string `yaml:"commentsSelector"`
@@ -28,10 +32,11 @@ type Matches struct {
 }
 
 type Configuration struct {
-	AppPath string   `yaml:"appPath"`
-	Data    *Data    `yaml:"data"`
-	Source  *Source  `yaml:"source"`
-	Results *Results `yaml:"results"`
-	Matches *Matches `yaml:"matches"`
-	Bot     *Bot     `yaml:"bot"`
+	AppPath  string    `yaml:"appPath"`
+	Data     *Data     `yaml:"data"`
+	Source   *Source   `yaml:"source"`
+	Results  *Results  `yaml:"results"`
+	Matches  *Matches  `yaml:"matches"`
+	Bot      *Bot      `yaml:"bot"`
+	Realtime *Realtime `yaml:"realtime"`
 }

@@ -1,4 +1,4 @@
-package common
+package context
 
 import (
 	"gopkg.in/yaml.v2"
