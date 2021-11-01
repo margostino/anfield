@@ -36,15 +36,13 @@ type Realtime struct {
 
 type Commentary struct {
 	MoreCommentsSelector string `yaml:"moreCommentsSelector"`
-	CommentsSelector     string `yaml:"commentsSelector"`
-	CommentUrlParam      string `yaml:"commentUrlParam"`
-	InfoUrlParam         string `yaml:"infoUrlParam"`
-	InfoSelector         string `yaml:"infoSelector"`
+	Selector             string `yaml:"selector"`
+	Params               string `yaml:"params"`
 }
 
 type Info struct {
-	InfoUrlParam string `yaml:"infoUrlParam"`
-	InfoSelector string `yaml:"infoSelector"`
+	Selector string `yaml:"selector"`
+	Params   string `yaml:"params"`
 }
 
 type Configuration struct {
