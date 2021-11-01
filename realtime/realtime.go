@@ -9,15 +9,21 @@ import (
 
 var config = context.GetConfig("./configuration/configuration.yml")
 
+// TODO: spawn multiple event consumer in parallel
 func main() {
 	scrapper.Initialize()
 	source.Initialize()
 	browser := scrapper.Browser()
 	defer browser.MustClose()
-	normalizedUrls := make([]string, 0)
-	baseUrl := config.Source.Url
-	for _, url := range config.Realtime.Matches {
-		normalizedUrls = append(normalizedUrls, baseUrl+url)
+	urls := make([]string, 0)
+	if config.Realtime.Matches != nil {
+		baseUrl := config.Source.Url
+		for _, url := range config.Realtime.Matches {
+			urls = append(urls, baseUrl+url)
+		}
+	} else {
+		urls = scrapper.GetInProgressResults(browser)
 	}
-	processor.Process(normalizedUrls)
+
+	processor.Process(urls)
 }

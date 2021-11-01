@@ -18,9 +18,6 @@ func main() {
 	}
 	browser := scrapper.Browser()
 	defer browser.MustClose()
-	url := config.Source.Url + config.Results.Url
-	selector := config.Results.Selector
-	pattern := config.Results.Pattern
-	urls := scrapper.GetUrlsResult(browser, url, selector, pattern)
+	urls := scrapper.GetFinishedResults(browser)
 	processor.Process(urls)
 }

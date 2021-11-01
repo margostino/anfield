@@ -8,6 +8,12 @@ type Results struct {
 	Pattern  string `yaml:"pattern"`
 }
 
+type Fixtures struct {
+	Url      string `yaml:"url"`
+	Selector string `yaml:"selector"`
+	Pattern  string `yaml:"pattern"`
+}
+
 type Data struct {
 	Update  bool   `yaml:"update"`
 	Matches string `yaml:"matches"`
@@ -28,7 +34,7 @@ type Realtime struct {
 	CountDown    int           `yaml:"countDown"`
 }
 
-type Matches struct {
+type Commentary struct {
 	MoreCommentsSelector string `yaml:"moreCommentsSelector"`
 	CommentsSelector     string `yaml:"commentsSelector"`
 	CommentUrlParam      string `yaml:"commentUrlParam"`
@@ -36,12 +42,19 @@ type Matches struct {
 	InfoSelector         string `yaml:"infoSelector"`
 }
 
+type Info struct {
+	InfoUrlParam string `yaml:"infoUrlParam"`
+	InfoSelector string `yaml:"infoSelector"`
+}
+
 type Configuration struct {
-	AppPath  string    `yaml:"appPath"`
-	Data     *Data     `yaml:"data"`
-	Source   *Source   `yaml:"source"`
-	Results  *Results  `yaml:"results"`
-	Matches  *Matches  `yaml:"matches"`
-	Bot      *Bot      `yaml:"bot"`
-	Realtime *Realtime `yaml:"realtime"`
+	AppPath    string      `yaml:"appPath"`
+	Data       *Data       `yaml:"data"`
+	Source     *Source     `yaml:"source"`
+	Results    *Results    `yaml:"results"`
+	Fixtures   *Fixtures   `yaml:"fixtures"`
+	Commentary *Commentary `yaml:"commentary"`
+	Info       *Info       `yaml:"info"`
+	Bot        *Bot        `yaml:"bot"`
+	Realtime   *Realtime   `yaml:"realtime"`
 }

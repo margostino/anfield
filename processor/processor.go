@@ -16,9 +16,9 @@ var msgs = make(chan string)
 func Process(urls []string) {
 	config := context.Config()
 	for _, url := range urls {
-		infoUrl := url + config.Matches.InfoUrlParam
+		infoUrl := url + config.Info.InfoUrlParam
 		date := scrapper.GetEventDate(infoUrl)
-		commentsUrl := url + config.Matches.CommentUrlParam
+		commentsUrl := url + config.Commentary.CommentUrlParam
 		go produce(date, commentsUrl)
 		go consume()
 		<-done
@@ -34,7 +34,7 @@ func produce(date string, url string) {
 	stopFlag := context.Config().Realtime.StopFlag
 	graceEndTime := context.Config().Realtime.GraceEndTime
 	countDown := 0
-	eventName := strings.Split(url, "/")[6]
+	eventName := strings.Split(url, "/")[7]
 	fmt.Printf("======== START: %s ========\n", eventName)
 	for ok := true; ok; ok = matchInProgress {
 		events := scrapper.GetEvents(date, url)
