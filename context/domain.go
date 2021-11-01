@@ -1,5 +1,7 @@
 package context
 
+import "time"
+
 type Results struct {
 	Url      string `yaml:"url"`
 	Selector string `yaml:"selector"`
@@ -20,7 +22,10 @@ type Bot struct {
 }
 
 type Realtime struct {
-	Matches []string `yaml:"matches"`
+	Matches      []string      `yaml:"matches"`
+	StopFlag     string        `yaml:"stopFlag"`
+	GraceEndTime time.Duration `yaml:"graceEndTime"`
+	CountDown    int           `yaml:"countDown"`
 }
 
 type Matches struct {
