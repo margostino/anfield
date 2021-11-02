@@ -2,7 +2,10 @@ package common
 
 import (
 	"fmt"
+	"github.com/margostino/anfield/domain"
 	"hash/fnv"
+	"reflect"
+	"regexp"
 	"sync"
 	"time"
 )
@@ -23,7 +26,30 @@ func Check(e error) {
 	}
 }
 
-func Contains(list []uint32, element uint32) bool {
+func InSlice(value, slice interface{}) bool {
+	switch reflect.TypeOf(slice).Kind() {
+	case reflect.Slice, reflect.Ptr:
+		values := reflect.Indirect(reflect.ValueOf(slice))
+		if values.Len() == 0 {
+			return false
+		}
+
+		val := reflect.Indirect(reflect.ValueOf(value))
+
+		if val.Kind() != values.Index(0).Kind() {
+			return false
+		}
+
+		for i := 0; i < values.Len(); i++ {
+			if reflect.DeepEqual(values.Index(i).Interface(), val.Interface()) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func ContainsString(list []string, element string) bool {
 	for _, value := range list {
 		if value == element {
 			return true
@@ -38,11 +64,18 @@ func Hash(value string) uint32 {
 	return hash.Sum32()
 }
 
-func Reverse(list *[]string) {
+func Reverse(list *[]*domain.Commentary) {
 	for i := 0; i < len(*list)/2; i++ {
 		j := len(*list) - i - 1
 		(*list)[i], (*list)[j] = (*list)[j], (*list)[i]
 	}
+}
+
+func NormalizeDay(day string) string {
+	if len(day) == 1 {
+		return "0" + day
+	}
+	return day
 }
 
 func NormalizeMonth(name string) string {
@@ -74,4 +107,18 @@ func NormalizeMonth(name string) string {
 	default:
 		return "-1"
 	}
+}
+
+func IsTimeCounter(value string) bool {
+	isTime, _ := regexp.MatchString("([0-9]?'|[0-9]{2}'|[0-9]{2}\\+[0-9]+'|HT)$", value)
+	return isTime
+}
+
+func IsFormationNumber(value string) bool {
+	isNumber, _ := regexp.MatchString("[1-9]+$", value)
+	return isNumber
+}
+
+func Even(number int) bool {
+	return number%2 == 0
 }

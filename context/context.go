@@ -1,5 +1,7 @@
 package context
 
+import "github.com/margostino/anfield/domain"
+
 var configuration = GetConfig("./configuration/configuration.yml")
 
 const (
@@ -7,7 +9,7 @@ const (
 	BATCH    = "batch"
 )
 
-func Config() *Configuration {
+func Config() *domain.Configuration {
 	return configuration
 }
 

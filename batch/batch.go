@@ -18,6 +18,6 @@ func main() {
 	}
 	browser := scrapper.Browser()
 	defer browser.MustClose()
-	urls := scrapper.GetFinishedResults(browser)
+	urls := scrapper.GetFinishedResults()
 	processor.Process(urls)
 }
