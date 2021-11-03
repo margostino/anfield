@@ -7,6 +7,7 @@ import (
 )
 
 // TODO: evaluate 2 consumers (goroutines): metadata + commentary
+// TODO: calculate stats, bot sender
 // This aggregation in consumer should happen once by URL/Event
 func consume() {
 	metadata := <-metadataBuffer
