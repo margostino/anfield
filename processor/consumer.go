@@ -16,6 +16,8 @@ func consume() {
 		Data:     make([]*domain.Commentary, 0),
 	}
 	commentaryLoop(event)
+	// TODO: when producer ends, this line below never happen
+	//source.WriteOnFileIfUpdate(event)
 }
 
 func commentaryLoop(event *domain.Event) {
@@ -30,7 +32,5 @@ func commentaryLoop(event *domain.Event) {
 		} else {
 			fmt.Printf("%s - %s\n", commentary.Time, commentary.Comment)
 		}
-
-		//source.WriteOnFileIfUpdate(event)
 	}
 }
