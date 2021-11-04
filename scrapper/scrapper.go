@@ -154,6 +154,7 @@ func GetMetadata(url string) *domain.Metadata {
 	eventDate := GetEventDate(url)
 	homeTeam, awayTeam := GetLineups(url)
 	return &domain.Metadata{
+		Url:      url,
 		Date:     eventDate,
 		HomeTeam: homeTeam,
 		AwayTeam: awayTeam,

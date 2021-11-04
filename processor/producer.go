@@ -10,12 +10,10 @@ import (
 	"time"
 )
 
-var commentaryBuffer = make(chan *domain.Commentary)
-var metadataBuffer = make(chan *domain.Metadata)
 
 func metadata(url string) {
 	metadata := scrapper.GetMetadata(url)
-	metadataBuffer <- metadata
+	metadataBuffer[url] <- metadata
 }
 
 // TODO: implement proper stop in loop but scan all partial events
@@ -27,6 +25,7 @@ func commentary(url string) {
 	eventName := strings.Split(url, "/")[7]
 	stopFlag := context.Config().Realtime.StopFlag
 	graceEndTime := context.Config().Realtime.GraceEndTime
+	commentaryUrl := url + context.Config().Commentary.Params
 
 	fmt.Printf("======== START: %s ========\n", eventName)
 
@@ -38,13 +37,13 @@ func commentary(url string) {
 			matchInProgress = false
 			break
 		}
-		rawEvents := scrapper.GetEvents(url)
+		rawEvents := scrapper.GetEvents(commentaryUrl)
 		commentaries := normalize(*rawEvents)
 		if sent != len(commentaries) {
 			for _, commentary := range commentaries {
 				newHash := common.Hash(commentary.Comment)
 				if !common.InSlice(sent, newHash) {
-					commentaryBuffer <- commentary
+					commentaryBuffer[url] <- commentary
 					sent += 1
 					if strings.Contains(commentary.Comment, stopFlag) {
 						endOfEvent = true
@@ -56,8 +55,8 @@ func commentary(url string) {
 
 	fmt.Printf("======== END: %s ========\n", eventName)
 
-	close(commentaryBuffer)
-	done <- true
+	close(commentaryBuffer[url])
+	asyncPool[url] <- true
 }
 
 func normalize(comments []string) []*domain.Commentary {

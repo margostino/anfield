@@ -9,8 +9,8 @@ import (
 // TODO: evaluate 2 consumers (goroutines): metadata + commentary
 // TODO: calculate stats, bot sender
 // This aggregation in consumer should happen once by URL/Event
-func consume() {
-	metadata := <-metadataBuffer
+func consume(url string) {
+	metadata := <-metadataBuffer[url]
 	event := &domain.Event{
 		Metadata: metadata,
 		Data:     make([]*domain.Commentary, 0),
@@ -22,15 +22,18 @@ func consume() {
 
 func commentaryLoop(event *domain.Event) {
 	for {
-		commentary := <-commentaryBuffer
+		commentary := <-commentaryBuffer[event.Metadata.Url]
 		event.Data = append(event.Data, commentary)
 
 		time.Sleep(100 * time.Millisecond)
 
-		if commentary.Time == "" && commentary.Comment != "" {
-			fmt.Printf("# %s\n", commentary.Comment)
-		} else {
-			fmt.Printf("%s - %s\n", commentary.Time, commentary.Comment)
+		if commentary != nil {
+			if commentary.Time == "" && commentary.Comment != "" {
+				fmt.Printf("# %s\n", commentary.Comment)
+			} else {
+				fmt.Printf("%s - %s\n", commentary.Time, commentary.Comment)
+			}
 		}
+
 	}
 }

@@ -7,6 +7,7 @@ type Team struct {
 }
 
 type Metadata struct {
+	Url      string
 	Date     string
 	HomeTeam *Team
 	AwayTeam *Team
