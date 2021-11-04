@@ -1,40 +1,49 @@
 package main
 
 import (
+	goContext "context"
+	"fmt"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/margostino/anfield/common"
 	"github.com/margostino/anfield/context"
+	"github.com/margostino/anfield/processor"
+	"github.com/segmentio/kafka-go"
 	"log"
-	"strings"
+	"time"
 )
 
 var config = context.GetConfig("./configuration/configuration.yml")
-
-var subscriptions = make(map[string]string)
-var matches = make([]string, 0)
+var bot *tgbotapi.BotAPI
 
 func main() {
-	bot, err := tgbotapi.NewBotAPI(config.Bot.Token)
-	initializeMatches()
-
-	if err != nil {
-		log.Panic(err)
-	}
-
+	context.Initialize()
+	botApi, err := tgbotapi.NewBotAPI(config.Bot.Token)
+	bot = botApi
+	common.Check(err)
 	bot.Debug = true
 
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
-	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
+	updateConfig := tgbotapi.NewUpdate(0)
+	updateConfig.Timeout = 60
 
-	updates, err := bot.GetUpdatesChan(u)
+	updates, err := bot.GetUpdatesChan(updateConfig)
+	poll(updates)
+}
+
+func poll(updates tgbotapi.UpdatesChannel) {
+	msg := tgbotapi.NewMessage(1929798658, "Hi!!!")
+	//msg.ReplyMarkup = replyMarkup
+	//msg.ReplyToMessageID = update.Message.MessageID
+	bot.Send(msg)
+	go consume()
 
 	for update := range updates {
 		if update.Message == nil { // ignore any non-Message Updates
 			continue
 		}
 		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
-		replyMessage, replyMarkup := process(update.Message.Text)
+		replyMessage, replyMarkup := processor.Reply(&update)
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, replyMessage)
 		msg.ReplyMarkup = replyMarkup
 		//msg.ReplyToMessageID = update.Message.MessageID
@@ -42,38 +51,34 @@ func main() {
 	}
 }
 
-func initializeMatches() {
-	for _, match := range config.Realtime.Matches {
-		matches = append(matches, strings.Split(match, "/")[1])
-	}
-}
+// TODO: wip
+func consume() {
+	// to consume messages
+	topic := "my-topic"
+	partition := 0
 
-func process(message string) (string, interface{}) {
-	var markup interface{}
-	var reply string
-	if message == "/subscribe" {
-		markup = getOptions()
-		reply = "select a match to follow"
-	} else {
-		markup = nil
-		reply = message
+	conn, err := kafka.DialLeader(goContext.Background(), "tcp", "localhost:9092", topic, partition)
+	if err != nil {
+		log.Fatal("failed to dial leader:", err)
 	}
-	return reply, markup
-}
 
-func getOptions() interface{} {
-	buttons := make([]tgbotapi.KeyboardButton, 0)
-	for _, match := range matches {
-		button := tgbotapi.KeyboardButton{
-			Text:            match,
-			RequestContact:  false,
-			RequestLocation: false,
+	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+	batch := conn.ReadBatch(10e3, 1e6) // fetch 10KB min, 1MB max
+
+	b := make([]byte, 10e3) // 10KB max per message
+	for {
+		n, err := batch.Read(b)
+		if err != nil {
+			break
 		}
-		buttons = append(buttons, button)
+		fmt.Println(string(b[:n]))
 	}
-	return &tgbotapi.ReplyKeyboardMarkup{
-		Keyboard: [][]tgbotapi.KeyboardButton{
-			buttons,
-		},
+
+	if err := batch.Close(); err != nil {
+		log.Fatal("failed to close batch:", err)
+	}
+
+	if err := conn.Close(); err != nil {
+		log.Fatal("failed to close connection:", err)
 	}
 }

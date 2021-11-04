@@ -1,6 +1,8 @@
 package context
 
-import "github.com/margostino/anfield/domain"
+import (
+	"github.com/margostino/anfield/domain"
+)
 
 var configuration = GetConfig("./configuration/configuration.yml")
 
