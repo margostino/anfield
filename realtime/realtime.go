@@ -9,7 +9,6 @@ import (
 
 var config = context.GetConfig("./configuration/configuration.yml")
 
-// TODO: spawn multiple event consumer in parallel
 func main() {
 	scrapper.Initialize()
 	source.Initialize()
@@ -17,8 +16,7 @@ func main() {
 	if file != nil {
 		defer file.Close()
 	}
-	browser := scrapper.Browser()
-	defer browser.MustClose()
+	defer scrapper.Browser().MustClose()
 	urls := make([]string, 0)
 	if config.Realtime.Matches != nil {
 		baseUrl := config.Source.Url

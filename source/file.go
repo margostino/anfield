@@ -29,7 +29,7 @@ func File() *os.File {
 func WriteOnFileIfUpdate(event *domain.Event) {
 	for _, commentary := range event.Data {
 		if file != nil {
-			line := fmt.Sprintf("%s;%s;%s", event.Metadata.Date, commentary.Time, commentary.Comment)
+			line := fmt.Sprintf("%s;%s;%s\n", event.Metadata.Date, commentary.Time, commentary.Comment)
 			_, err := file.WriteString(line)
 			common.Check(err)
 		}

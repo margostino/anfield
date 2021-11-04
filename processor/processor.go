@@ -6,11 +6,10 @@ import (
 	"sync"
 )
 
-var asyncPool = make(map[string]chan bool, 0)
+var waitGroups = make(map[string]*sync.WaitGroup, 0)
 var commentaryBuffer = make(map[string]chan *domain.Commentary)
 var metadataBuffer = make(map[string]chan *domain.Metadata)
 
-// Process TODO: spawn one process per URL
 func Process(urls []string) {
 	wg := common.WaitGroup(len(urls))
 	for _, url := range urls {
@@ -20,8 +19,7 @@ func Process(urls []string) {
 }
 
 func async(url string, waitGroup *sync.WaitGroup) {
-	var done = make(chan bool)
-	asyncPool[url] = done
+	waitGroups[url] = common.WaitGroup(3)
 	commentaryBuffer[url] = make(chan *domain.Commentary)
 	metadataBuffer[url] = make(chan *domain.Metadata)
 
@@ -29,6 +27,6 @@ func async(url string, waitGroup *sync.WaitGroup) {
 	go produceCommentary(url)
 	go consume(url)
 
-	<-done
+	waitGroups[url].Wait()
 	waitGroup.Done()
 }

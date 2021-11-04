@@ -13,6 +13,7 @@ import (
 func produceMetadata(url string) {
 	metadata := scrapper.GetMetadata(url)
 	metadataBuffer[url] <- metadata
+	waitGroups[url].Done()
 }
 
 // TODO: implement proper stop in loop but scan all partial events
@@ -51,8 +52,13 @@ func produceCommentary(url string) {
 
 	fmt.Printf("======== END: %s ========\n", eventName)
 
+	commentaryBuffer[url] <- &domain.Commentary{
+		Time:    "end",
+		Comment: "end",
+	}
+
 	close(commentaryBuffer[url])
-	asyncPool[url] <- true
+	waitGroups[url].Done()
 }
 
 func normalize(comments []string) []*domain.Commentary {

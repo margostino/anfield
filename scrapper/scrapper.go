@@ -153,8 +153,10 @@ func GetLineups(url string) (*domain.Team, *domain.Team) {
 func GetMetadata(url string) *domain.Metadata {
 	eventDate := GetEventDate(url)
 	homeTeam, awayTeam := GetLineups(url)
+	h2h := fmt.Sprintf("%s vs %s", homeTeam.Name, awayTeam.Name)
 	return &domain.Metadata{
 		Url:      url,
+		H2H:      h2h,
 		Date:     eventDate,
 		HomeTeam: homeTeam,
 		AwayTeam: awayTeam,
