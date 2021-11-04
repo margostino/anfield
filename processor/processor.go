@@ -25,8 +25,8 @@ func async(url string, waitGroup *sync.WaitGroup) {
 	commentaryBuffer[url] = make(chan *domain.Commentary)
 	metadataBuffer[url] = make(chan *domain.Metadata)
 
-	go metadata(url)
-	go commentary(url)
+	go produceMetadata(url)
+	go produceCommentary(url)
 	go consume(url)
 
 	<-done

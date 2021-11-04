@@ -49,15 +49,6 @@ func InSlice(value, slice interface{}) bool {
 	return false
 }
 
-func ContainsString(list []string, element string) bool {
-	for _, value := range list {
-		if value == element {
-			return true
-		}
-	}
-	return false
-}
-
 func Hash(value string) uint32 {
 	hash := fnv.New32a()
 	hash.Write([]byte(value))

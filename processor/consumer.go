@@ -3,6 +3,7 @@ package processor
 import (
 	"fmt"
 	"github.com/margostino/anfield/domain"
+	"github.com/margostino/anfield/source"
 	"time"
 )
 
@@ -17,7 +18,7 @@ func consume(url string) {
 	}
 	commentaryLoop(event)
 	// TODO: when producer ends, this line below never happen
-	//source.WriteOnFileIfUpdate(event)
+	source.WriteOnFileIfUpdate(event)
 }
 
 func commentaryLoop(event *domain.Event) {

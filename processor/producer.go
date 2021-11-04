@@ -10,14 +10,13 @@ import (
 	"time"
 )
 
-
-func metadata(url string) {
+func produceMetadata(url string) {
 	metadata := scrapper.GetMetadata(url)
 	metadataBuffer[url] <- metadata
 }
 
 // TODO: implement proper stop in loop but scan all partial events
-func commentary(url string) {
+func produceCommentary(url string) {
 	countDown := 0
 	endOfEvent := false
 	matchInProgress := true
@@ -41,13 +40,10 @@ func commentary(url string) {
 		commentaries := normalize(*rawEvents)
 		if sent != len(commentaries) {
 			for _, commentary := range commentaries {
-				newHash := common.Hash(commentary.Comment)
-				if !common.InSlice(sent, newHash) {
-					commentaryBuffer[url] <- commentary
-					sent += 1
-					if strings.Contains(commentary.Comment, stopFlag) {
-						endOfEvent = true
-					}
+				commentaryBuffer[url] <- commentary
+				sent += 1
+				if strings.Contains(commentary.Comment, stopFlag) {
+					endOfEvent = true
 				}
 			}
 		}
