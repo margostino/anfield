@@ -32,10 +32,12 @@ func main() {
 }
 
 func poll(updates tgbotapi.UpdatesChannel) {
-	msg := tgbotapi.NewMessage(1929798658, "Hi!!!")
-	//msg.ReplyMarkup = replyMarkup
-	//msg.ReplyToMessageID = update.Message.MessageID
-	bot.Send(msg)
+	for _, chatId := range context.Config().Bot.ChatIds {
+		msg := tgbotapi.NewMessage(chatId, "Hi!!!")
+		msg.ReplyMarkup = nil
+		bot.Send(msg)
+	}
+
 	go consume()
 
 	for update := range updates {

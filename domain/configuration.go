@@ -24,7 +24,8 @@ type SourceConfig struct {
 }
 
 type BotConfig struct {
-	Token string `yaml:"token"`
+	Token   string  `yaml:"token"`
+	ChatIds []int64 `yaml:"chatIds"`
 }
 
 type RealtimeConfig struct {
