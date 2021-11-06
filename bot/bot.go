@@ -1,23 +1,19 @@
 package main
 
 import (
-	goContext "context"
-	"fmt"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/margostino/anfield/common"
 	"github.com/margostino/anfield/context"
 	"github.com/margostino/anfield/processor"
-	"github.com/segmentio/kafka-go"
 	"log"
-	"time"
 )
 
-var config = context.GetConfig("./configuration/configuration.yml")
+var config = context.BotConfig("./configuration/configuration.yml")
 var bot *tgbotapi.BotAPI
 
 func main() {
 	context.Initialize()
-	botApi, err := tgbotapi.NewBotAPI(config.Bot.Token)
+	botApi, err := tgbotapi.NewBotAPI(config.Token)
 	bot = botApi
 	common.Check(err)
 	bot.Debug = true
@@ -32,14 +28,21 @@ func main() {
 }
 
 func poll(updates tgbotapi.UpdatesChannel) {
+	welcome()
+	go processor.Consume(config.Kafka.Topic, config.Kafka.Protocol, config.Kafka.Address)
+	reply(updates)
+
+}
+
+func welcome() {
 	for _, chatId := range context.Config().Bot.ChatIds {
 		msg := tgbotapi.NewMessage(chatId, "Hi!!!")
 		msg.ReplyMarkup = nil
 		bot.Send(msg)
 	}
+}
 
-	go consume()
-
+func reply(updates tgbotapi.UpdatesChannel) {
 	for update := range updates {
 		if update.Message == nil { // ignore any non-Message Updates
 			continue
@@ -50,37 +53,5 @@ func poll(updates tgbotapi.UpdatesChannel) {
 		msg.ReplyMarkup = replyMarkup
 		//msg.ReplyToMessageID = update.Message.MessageID
 		bot.Send(msg)
-	}
-}
-
-// TODO: wip
-func consume() {
-	// to consume messages
-	topic := "my-topic"
-	partition := 0
-
-	conn, err := kafka.DialLeader(goContext.Background(), "tcp", "localhost:9092", topic, partition)
-	if err != nil {
-		log.Fatal("failed to dial leader:", err)
-	}
-
-	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
-	batch := conn.ReadBatch(10e3, 1e6) // fetch 10KB min, 1MB max
-
-	b := make([]byte, 10e3) // 10KB max per message
-	for {
-		n, err := batch.Read(b)
-		if err != nil {
-			break
-		}
-		fmt.Println(string(b[:n]))
-	}
-
-	if err := batch.Close(); err != nil {
-		log.Fatal("failed to close batch:", err)
-	}
-
-	if err := conn.Close(); err != nil {
-		log.Fatal("failed to close connection:", err)
 	}
 }

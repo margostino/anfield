@@ -23,9 +23,16 @@ type SourceConfig struct {
 	Url string `yaml:"url"`
 }
 
+type BotKafkaConfig struct {
+	Topic    string `yaml:"topic"`
+	Protocol string `yaml:"protocol"`
+	Address  string `yaml:"address"`
+}
+
 type BotConfig struct {
-	Token   string  `yaml:"token"`
-	ChatIds []int64 `yaml:"chatIds"`
+	Kafka   *BotKafkaConfig `yaml:"kafka"`
+	Token   string          `yaml:"token"`
+	ChatIds []int64         `yaml:"chatIds"`
 }
 
 type RealtimeConfig struct {

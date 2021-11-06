@@ -26,7 +26,7 @@ func async(url string, waitGroup *sync.WaitGroup) {
 	go produceMetadata(url)
 	go produceCommentary(url)
 	// TODO: consumer does not need be a goroutine if it implements a infinite loop, unless we want extra process after that.
-	go consume(url)
+	go consumeChannel(url)
 
 	waitGroups[url].Wait()
 	waitGroup.Done()

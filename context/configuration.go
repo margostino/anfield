@@ -22,3 +22,7 @@ func GetConfig(file string) *domain.Configuration {
 	}
 	return &configuration
 }
+
+func BotConfig(file string) *domain.BotConfig {
+	return GetConfig(file).Bot
+}
