@@ -23,10 +23,10 @@ func async(url string, waitGroup *sync.WaitGroup) {
 	commentaryBuffer[url] = make(chan *domain.Commentary)
 	metadataBuffer[url] = make(chan *domain.Metadata)
 
-	go produceMetadata(url)
-	go produceCommentary(url)
+	go publishMetadata(url)
+	go publishCommentary(url)
 	// TODO: consumer does not need be a goroutine if it implements a infinite loop, unless we want extra process after that.
-	go consumeChannel(url)
+	go listen(url)
 
 	waitGroups[url].Wait()
 	waitGroup.Done()

@@ -10,14 +10,14 @@ import (
 	"time"
 )
 
-func produceMetadata(url string) {
+func publishMetadata(url string) {
 	metadata := scrapper.GetMetadata(url)
 	metadataBuffer[url] <- metadata
 	waitGroups[url].Done()
 }
 
 // TODO: implement proper stop in loop but scan all partial events
-func produceCommentary(url string) {
+func publishCommentary(url string) {
 	countDown := 0
 	endOfEvent := false
 	matchInProgress := true
