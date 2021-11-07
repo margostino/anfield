@@ -2,7 +2,6 @@ package common
 
 import (
 	"fmt"
-	"github.com/margostino/anfield/domain"
 	"hash/fnv"
 	"reflect"
 	"regexp"
@@ -53,13 +52,6 @@ func Hash(value string) uint32 {
 	hash := fnv.New32a()
 	hash.Write([]byte(value))
 	return hash.Sum32()
-}
-
-func Reverse(list *[]*domain.Commentary) {
-	for i := 0; i < len(*list)/2; i++ {
-		j := len(*list) - i - 1
-		(*list)[i], (*list)[j] = (*list)[j], (*list)[i]
-	}
 }
 
 func NormalizeDay(day string) string {

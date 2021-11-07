@@ -3,39 +3,33 @@ package main
 import (
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/margostino/anfield/common"
+	"github.com/margostino/anfield/configuration"
 	"github.com/margostino/anfield/context"
 	"github.com/margostino/anfield/processor"
 	"log"
 )
 
-var config = context.BotConfig("./configuration/configuration.yml")
 var bot *tgbotapi.BotAPI
 
 func main() {
 	context.Initialize()
-	botApi, err := tgbotapi.NewBotAPI(config.Token)
-	bot = botApi
-	common.Check(err)
-	bot.Debug = true
-
-	log.Printf("Authorized on account %s", bot.Self.UserName)
-
+	processor.Initialize()
+	bot = newBot()
 	updateConfig := tgbotapi.NewUpdate(0)
 	updateConfig.Timeout = 60
-
-	updates, err := bot.GetUpdatesChan(updateConfig)
+	updates, _ := bot.GetUpdatesChan(updateConfig)
+	welcome()
 	poll(updates)
+	processor.Close()
 }
 
 func poll(updates tgbotapi.UpdatesChannel) {
-	welcome()
-	go processor.Consume(config.Kafka.Topic, config.Kafka.Protocol, config.Kafka.Address)
+	go processor.Consume()
 	reply(updates)
-
 }
 
 func welcome() {
-	for _, chatId := range context.Config().Bot.ChatIds {
+	for _, chatId := range configuration.Bot().ChatIds {
 		msg := tgbotapi.NewMessage(chatId, "Hi!!!")
 		msg.ReplyMarkup = nil
 		bot.Send(msg)
@@ -54,4 +48,12 @@ func reply(updates tgbotapi.UpdatesChannel) {
 		//msg.ReplyToMessageID = update.Message.MessageID
 		bot.Send(msg)
 	}
+}
+
+func newBot() *tgbotapi.BotAPI {
+	bot, error := tgbotapi.NewBotAPI(configuration.Bot().Token)
+	common.Check(error)
+	bot.Debug = true
+	log.Printf("Authorized on account %s", bot.Self.UserName)
+	return bot
 }

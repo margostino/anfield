@@ -1,30 +1,35 @@
 package main
 
 import (
-	"github.com/margostino/anfield/context"
+	"github.com/margostino/anfield/configuration"
 	"github.com/margostino/anfield/processor"
-	"github.com/margostino/anfield/scrapper"
 	"github.com/margostino/anfield/source"
 )
 
-var config = context.GetConfig("./configuration/configuration.yml")
-
 func main() {
-	scrapper.Initialize()
 	source.Initialize()
+	processor.Initialize()
+	webScrapper := processor.WebScrapper()
 	file := source.File()
+
 	if file != nil {
 		defer file.Close()
 	}
-	defer scrapper.Browser().MustClose()
+
+	defer webScrapper.Browser.MustClose()
+
 	urls := make([]string, 0)
-	if config.Realtime.Matches != nil {
-		baseUrl := config.Source.Url
-		for _, url := range config.Realtime.Matches {
+	matches := configuration.Realtime().Matches
+
+	if matches != nil {
+		baseUrl := configuration.Source().Url
+		for _, url := range matches {
 			urls = append(urls, baseUrl+url)
 		}
 	} else {
-		urls = scrapper.GetInProgressResults()
+		urls = processor.GetInProgressResults()
 	}
+	
 	processor.Process(urls)
+	processor.Close()
 }

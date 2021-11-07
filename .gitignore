@@ -18,4 +18,4 @@
 *.iml
 
 data/
-configuration/configuration.yml
+configuration.yml

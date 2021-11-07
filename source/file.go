@@ -1,19 +1,16 @@
 package source
 
 import (
-	"fmt"
 	"github.com/margostino/anfield/common"
-	"github.com/margostino/anfield/context"
-	"github.com/margostino/anfield/domain"
+	"github.com/margostino/anfield/configuration"
 	"os"
 )
 
 var file *os.File
 
 func Initialize() {
-	config := context.Config()
-	if context.ShouldUpdateData() {
-		filename := config.AppPath + config.Data.Matches
+	if configuration.Data().Update {
+		filename := configuration.AppPath() + configuration.Data().MatchesPath
 		f, err := os.OpenFile(filename, os.O_TRUNC|os.O_RDWR|os.O_CREATE, 0644)
 		common.Check(err)
 		file = f
@@ -26,10 +23,9 @@ func File() *os.File {
 	return file
 }
 
-func WriteOnFileIfUpdate(event *domain.Event) {
-	for _, commentary := range event.Data {
+func WriteOnFileIfUpdate(lines []string) {
+	for _, line := range lines {
 		if file != nil {
-			line := fmt.Sprintf("%s;%s;%s\n", event.Metadata.Date, commentary.Time, commentary.Comment)
 			_, err := file.WriteString(line)
 			common.Check(err)
 		}

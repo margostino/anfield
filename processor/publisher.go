@@ -1,34 +1,27 @@
 package processor
 
 import (
-	"context"
-	context2 "github.com/margostino/anfield/context"
-	"github.com/margostino/anfield/domain"
+	"encoding/json"
+	"fmt"
 	"github.com/segmentio/kafka-go"
 	"log"
 	"time"
 )
 
-func publish(metadata *domain.Metadata, commentary *domain.Commentary) {
-	// to produce messages
-	topic := context2.Config().Bot.Kafka.Topic
-	address := context2.Config().Bot.Kafka.Address
-	partition := 0
+func publish(event *Event) {
 
-	conn, err := kafka.DialLeader(context.Background(), "tcp", address, topic, partition)
-	if err != nil {
-		log.Fatal("failed to dial leader:", err)
+	b, err2 := json.Marshal(event)
+	if err2 != nil {
+		fmt.Println(err2)
+		return
 	}
+	fmt.Println(string(b))
 
-	conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
-	_, err = conn.WriteMessages(
+	// TODO: send partial and not all.
+	_, err := kafkaConnection.WriteMessages(
 		kafka.Message{Value: []byte("new event: " + time.Now().String())},
 	)
 	if err != nil {
 		log.Fatal("failed to write messages:", err)
-	}
-
-	if err := conn.Close(); err != nil {
-		log.Fatal("failed to close writer:", err)
 	}
 }

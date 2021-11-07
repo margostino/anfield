@@ -1,6 +1,7 @@
 package context
 
 import (
+	"github.com/margostino/anfield/configuration"
 	"strings"
 )
 
@@ -16,7 +17,7 @@ func Matches() []string {
 }
 
 func Initialize() {
-	for _, match := range Config().Realtime.Matches {
+	for _, match := range configuration.Realtime().Matches {
 		matches = append(matches, strings.Split(match, "/")[1])
 	}
 }

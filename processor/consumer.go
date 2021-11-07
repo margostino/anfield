@@ -1,37 +1,24 @@
 package processor
 
 import (
-	"context"
 	"fmt"
-	"github.com/segmentio/kafka-go"
 	"log"
 )
 
-func Consume(topic string, protocol string, address string) {
-	partition := 0
+func Consume() {
 
-	conn, err := kafka.DialLeader(context.Background(), protocol, address, topic, partition)
-	if err != nil {
-		log.Fatal("failed to dial leader:", err)
-	}
+	batch := kafkaConnection.ReadBatch(10e3, 1e6) // fetch 10KB min, 1MB max
+	buffer := make([]byte, 10e3)                  // 10KB max per message
 
-	//conn.SetReadDeadline(time.Now().Add(10 * time.Second))
-	batch := conn.ReadBatch(10e3, 1e6) // fetch 10KB min, 1MB max
-
-	b := make([]byte, 10e3) // 10KB max per message
 	for {
-		n, err := batch.Read(b)
+		noBytes, err := batch.Read(buffer)
 		if err != nil {
 			break
 		}
-		fmt.Println(string(b[:n]))
+		fmt.Println(string(buffer[:noBytes]))
 	}
 
 	if err := batch.Close(); err != nil {
 		log.Fatal("failed to close batch:", err)
-	}
-
-	if err := conn.Close(); err != nil {
-		log.Fatal("failed to close connection:", err)
 	}
 }

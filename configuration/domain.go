@@ -1,4 +1,4 @@
-package domain
+package configuration
 
 import "time"
 
@@ -15,8 +15,8 @@ type FixturesConfig struct {
 }
 
 type DataConfig struct {
-	Update  bool   `yaml:"update"`
-	Matches string `yaml:"matches"`
+	Update      bool   `yaml:"update"`
+	MatchesPath string `yaml:"matchesPath"`
 }
 
 type SourceConfig struct {

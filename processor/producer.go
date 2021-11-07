@@ -2,30 +2,134 @@ package processor
 
 import (
 	"fmt"
+	"github.com/go-rod/rod"
 	"github.com/margostino/anfield/common"
-	"github.com/margostino/anfield/context"
-	"github.com/margostino/anfield/domain"
-	"github.com/margostino/anfield/scrapper"
+	"github.com/margostino/anfield/configuration"
 	"strings"
 	"time"
 )
 
+func getEventDate(url string) string {
+	infoUrl := url + configuration.Info().Params
+	selector := configuration.Info().Selector
+	startTimeDetail := webScrapper.GoPage(infoUrl).Text(selector)
+	startTime := strings.Split(startTimeDetail, "\n")[0]
+	day := strings.Split(startTime, " ")[0]
+	month := strings.Split(startTime, " ")[1]
+	year := strings.Split(startTime, " ")[2]
+	normalizedStartTime := fmt.Sprintf("%s-%s-%s", year, common.NormalizeMonth(month), common.NormalizeDay(day))
+	eventDate, _ := time.Parse("2006-01-02", normalizedStartTime)
+	return eventDate.String()
+}
+
+func getLineups(url string) (*Team, *Team) {
+	lineupsUrl := url + configuration.Lineups().Params
+	homeTeamSelector := configuration.Lineups().HomeTeamSelector
+	awayTeamSelector := configuration.Lineups().AwayTeamSelector
+	homeFormSelector := configuration.Lineups().HomeSelector
+	awayFormSelector := configuration.Lineups().HomeSelector
+	substituteSelector := configuration.Lineups().SubstituteSelector
+
+	page := webScrapper.GoPage(lineupsUrl)
+	homeTeamName := page.Text(homeTeamSelector)
+	awayTeamName := page.Text(awayTeamSelector)
+	rawHomeFormation := page.Text(homeFormSelector)
+	rawAwayFormation := page.Text(awayFormSelector)
+	rawSubstitutes := page.Elements(substituteSelector)
+
+	homeFormation := getFormation(rawHomeFormation)
+	awayFormation := getFormation(rawAwayFormation)
+	homeSubstitutes, awaySubstitutes := getSubstitutes(&rawSubstitutes)
+
+	homeTeam := Team{
+		Name:              homeTeamName,
+		Form:              homeFormation,
+		SubstitutePlayers: homeSubstitutes,
+	}
+	awayTeam := Team{
+		Name:              awayTeamName,
+		Form:              awayFormation,
+		SubstitutePlayers: awaySubstitutes,
+	}
+	return &homeTeam, &awayTeam
+}
+
+func getSubstitutes(elements *rod.Elements) ([]string, []string) {
+	parseSubstitute := false
+	players := make([]string, 0)
+	normalizedPlayers := make([]string, 0)
+	homeSubstitutes := make([]string, 0)
+	awaySubstitutes := make([]string, 0)
+
+	for _, element := range *elements {
+		value := element.MustText()
+		if value == "SUBSTITUTE PLAYERS" {
+			parseSubstitute = true
+		} else if parseSubstitute && !common.IsTimeCounter(value) && !common.InSlice(value, players) {
+			players = strings.Split(value, "\n")
+			break
+		} else if value == "COACHES" {
+			break
+		}
+	}
+
+	for _, value := range players {
+		if !common.IsTimeCounter(value) {
+			normalizedPlayers = append(normalizedPlayers, value)
+		}
+	}
+
+	for i, player := range normalizedPlayers {
+		if common.Even(i) {
+			homeSubstitutes = append(homeSubstitutes, player)
+		} else {
+			awaySubstitutes = append(awaySubstitutes, player)
+		}
+	}
+
+	return homeSubstitutes, awaySubstitutes
+}
+
+func getFormation(raw string) []string {
+	players := make([]string, 0)
+	values := strings.Split(raw, "\n")
+	for _, value := range values {
+		if !common.IsFormationNumber(value) {
+			players = append(players, value)
+		}
+	}
+	return players
+}
+
+func getMetadata(url string) *Metadata {
+	eventDate := getEventDate(url)
+	homeTeam, awayTeam := getLineups(url)
+	h2h := fmt.Sprintf("%s vs %s", homeTeam.Name, awayTeam.Name)
+	return &Metadata{
+		Url:      url,
+		H2H:      h2h,
+		Date:     eventDate,
+		HomeTeam: homeTeam,
+		AwayTeam: awayTeam,
+	}
+}
+
 func publishMetadata(url string) {
-	metadata := scrapper.GetMetadata(url)
+	metadata := getMetadata(url)
 	metadataBuffer[url] <- metadata
 	waitGroups[url].Done()
 }
 
 // TODO: implement proper stop in loop but scan all partial events
 func publishCommentary(url string) {
+	sent := 0
 	countDown := 0
 	endOfEvent := false
 	matchInProgress := true
-	sent := 0
 	eventName := strings.Split(url, "/")[7]
-	stopFlag := context.Config().Realtime.StopFlag
-	graceEndTime := context.Config().Realtime.GraceEndTime
-	commentaryUrl := url + context.Config().Commentary.Params
+	stopFlag := configuration.Realtime().StopFlag
+	graceEndTime := configuration.Realtime().GraceEndTime
+	commentaryUrl := url + configuration.Commentary().Params
 
 	fmt.Printf("======== START: %s ========\n", eventName)
 
@@ -33,11 +137,11 @@ func publishCommentary(url string) {
 		if endOfEvent && countDown == 0 {
 			time.Sleep(graceEndTime * time.Millisecond)
 			countDown += 1
-		} else if endOfEvent && countDown == context.Config().Realtime.CountDown {
+		} else if endOfEvent && countDown == configuration.Realtime().CountDown {
 			matchInProgress = false
 			break
 		}
-		rawEvents := scrapper.GetEvents(commentaryUrl)
+		rawEvents := getEvents(commentaryUrl)
 		commentaries := normalize(*rawEvents)
 		if sent != len(commentaries) {
 			for _, commentary := range commentaries {
@@ -52,7 +156,7 @@ func publishCommentary(url string) {
 
 	fmt.Printf("======== END: %s ========\n", eventName)
 
-	commentaryBuffer[url] <- &domain.Commentary{
+	commentaryBuffer[url] <- &Commentary{
 		Time:    "end",
 		Comment: "end",
 	}
@@ -61,15 +165,26 @@ func publishCommentary(url string) {
 	waitGroups[url].Done()
 }
 
-func normalize(comments []string) []*domain.Commentary {
+// GetEvents TODO: read events as unbounded streams or until conditions (e.g. 90' time, message pattern, etc)
+func getEvents(url string) *[]string {
+	moreCommentSelector := configuration.Commentary().MoreCommentsSelector
+	commentSelector := configuration.Commentary().Selector
+	page := webScrapper.GoPage(url)
+	page.Click(moreCommentSelector)
+	rawEvents := page.Text(commentSelector)
+	events := strings.Split(rawEvents, "\n")
+	return &events
+}
+
+func normalize(comments []string) []*Commentary {
 	var time string
-	var commentaries = make([]*domain.Commentary, 0)
+	var commentaries = make([]*Commentary, 0)
 
 	for _, value := range comments {
 		if common.IsTimeCounter(value) {
 			time = value
 		} else {
-			commentary := domain.Commentary{
+			commentary := Commentary{
 				Time:    time,
 				Comment: value,
 			}
@@ -77,6 +192,13 @@ func normalize(comments []string) []*domain.Commentary {
 			time = ""
 		}
 	}
-	common.Reverse(&commentaries)
+	reverse(&commentaries)
 	return commentaries
+}
+
+func reverse(list *[]*Commentary) {
+	for i := 0; i < len(*list)/2; i++ {
+		j := len(*list) - i - 1
+		(*list)[i], (*list)[j] = (*list)[j], (*list)[i]
+	}
 }
