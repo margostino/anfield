@@ -1,25 +1,20 @@
 package processor
 
 import (
+	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/segmentio/kafka-go"
 	"log"
-	"time"
 )
 
 func publish(event *Event) {
-
-	b, err2 := json.Marshal(event)
-	if err2 != nil {
-		fmt.Println(err2)
-		return
-	}
-	fmt.Println(string(b))
-
+	eventJson, _ := json.Marshal(event)
 	// TODO: send partial and not all.
-	_, err := kafkaConnection.WriteMessages(
-		kafka.Message{Value: []byte("new event: " + time.Now().String())},
+	err := kafkaWiter.WriteMessages(context.Background(),
+		kafka.Message{
+			Key:   []byte("event-id-" + string(len(event.Data))),
+			Value: []byte(string(eventJson)),
+		},
 	)
 	if err != nil {
 		log.Fatal("failed to write messages:", err)

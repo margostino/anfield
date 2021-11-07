@@ -1,24 +1,16 @@
 package processor
 
 import (
+	"context"
 	"fmt"
-	"log"
 )
 
 func Consume() {
-
-	batch := kafkaConnection.ReadBatch(10e3, 1e6) // fetch 10KB min, 1MB max
-	buffer := make([]byte, 10e3)                  // 10KB max per message
-
 	for {
-		noBytes, err := batch.Read(buffer)
+		m, err := kafkaReader.ReadMessage(context.Background())
 		if err != nil {
 			break
 		}
-		fmt.Println(string(buffer[:noBytes]))
-	}
-
-	if err := batch.Close(); err != nil {
-		log.Fatal("failed to close batch:", err)
+		fmt.Printf("message at offset %d: %s = %s\n", m.Offset, string(m.Key), string(m.Value))
 	}
 }

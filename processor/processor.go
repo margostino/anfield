@@ -1,7 +1,6 @@
 package processor
 
 import (
-	goContext "context"
 	"fmt"
 	"github.com/margostino/anfield/common"
 	"github.com/margostino/anfield/configuration"
@@ -11,7 +10,6 @@ import (
 	"log"
 	"strings"
 	"sync"
-	"time"
 )
 
 var webScrapper *scrapper.Scrapper
@@ -19,36 +17,60 @@ var waitGroups map[string]*sync.WaitGroup
 var metadataBuffer map[string]chan *Metadata
 var commentaryBuffer map[string]chan *Commentary
 var kafkaConnection *kafka.Conn
+var kafkaReader *kafka.Reader
+var kafkaWiter *kafka.Writer
 
 func Initialize() {
 	webScrapper = scrapper.New()
 	waitGroups = make(map[string]*sync.WaitGroup, 0)
 	commentaryBuffer = make(map[string]chan *Commentary)
 	metadataBuffer = make(map[string]chan *Metadata)
-	kafkaConnection = newKafkaConnection()
+	kafkaWiter = NewKafkaWriter()
+	kafkaReader = NewKafkaReader()
 }
 
 func Close() {
-	if err := kafkaConnection.Close(); err != nil {
-		log.Fatal("failed to close writer:", err)
+	if err := kafkaReader.Close(); err != nil {
+		log.Fatal("failed to close kafka reader:", err)
+	}
+	if err := kafkaWiter.Close(); err != nil {
+		log.Fatal("failed to close kafka writer:", err)
 	}
 }
 
-func newKafkaConnection() *kafka.Conn {
-	topic := configuration.Bot().Kafka.Topic
-	protocol := configuration.Bot().Kafka.Protocol
-	address := configuration.Bot().Kafka.Address
-	partition := 0
+func NewKafkaWriter() *kafka.Writer {
+	topic := configuration.Kafka().Topic
+	address := configuration.Kafka().Address
 
-	conn, err := kafka.DialLeader(goContext.Background(), protocol, address, topic, partition)
-	if err != nil {
-		log.Fatal("failed to dial leader:", err)
+	// make a writer that produces to topic-A, using the least-bytes distribution
+	writer := &kafka.Writer{
+		Addr:     kafka.TCP(address),
+		Topic:    topic,
+		Balancer: &kafka.LeastBytes{},
 	}
 
-	conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
-	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+	//conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 
-	return conn
+	return writer
+}
+
+func NewKafkaReader() *kafka.Reader {
+	topic := configuration.Kafka().Topic
+	address := configuration.Kafka().Address
+	consumerGroupId := configuration.Kafka().ConsumerGroupId
+
+	reader := kafka.NewReader(kafka.ReaderConfig{
+		Brokers:  []string{address},
+		GroupID:  consumerGroupId,
+		Topic:    topic,
+		MinBytes: 10e3, // 10KB
+		MaxBytes: 10e6, // 10MB
+	})
+
+	//conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+	//conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+
+	return reader
 }
 
 func WebScrapper() *scrapper.Scrapper {

@@ -33,6 +33,10 @@ func Bot() *BotConfig {
 	return config.Bot
 }
 
+func Kafka() *KafkaConfig {
+	return config.Kafka
+}
+
 func Realtime() *RealtimeConfig {
 	return config.Realtime
 }
