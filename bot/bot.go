@@ -1,50 +1,54 @@
-package main
+package bot
 
 import (
-	"github.com/go-telegram-bot-api/telegram-bot-api"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/margostino/anfield/common"
 	"github.com/margostino/anfield/configuration"
 	"github.com/margostino/anfield/context"
-	"github.com/margostino/anfield/processor"
-	"log"
 )
 
-var bot *tgbotapi.BotAPI
+func Reply(update *tgbotapi.Update) (string, interface{}) {
+	var markup interface{}
+	var reply string
+	message := update.Message.Text
+	username := update.Message.Chat.UserName
+	if message == "/subscribe" {
+		markup = getOptions()
+		reply = "select a match to follow"
+	} else {
+		if common.InSlice(message, context.Matches()) {
+			context.Subscribe(username, message)
+			reply = "Done!"
+		} else {
+			reply = message
+		}
+		markup = nil
 
-func main() {
-	context.Initialize()
-	processor.Initialize()
-	bot = context.Bot()
-	updateConfig := tgbotapi.NewUpdate(0)
-	updateConfig.Timeout = 60
-	updates, _ := bot.GetUpdatesChan(updateConfig)
-	welcome()
-	poll(updates)
-	processor.Close()
+	}
+	return reply, markup
 }
 
-func poll(updates tgbotapi.UpdatesChannel) {
-	go processor.Consume()
-	reply(updates)
-}
-
-func welcome() {
+func Send(message string) {
 	for _, chatId := range configuration.Bot().ChatIds {
-		msg := tgbotapi.NewMessage(chatId, "Hi!!!")
+		msg := tgbotapi.NewMessage(chatId, message)
 		msg.ReplyMarkup = nil
-		bot.Send(msg)
+		context.Bot().Send(msg) // TODO: filtering by subscription options
 	}
 }
 
-func reply(updates tgbotapi.UpdatesChannel) {
-	for update := range updates {
-		if update.Message == nil { // ignore any non-Message Updates
-			continue
+func getOptions() interface{} {
+	buttons := make([]tgbotapi.KeyboardButton, 0)
+	for _, match := range context.Matches() {
+		button := tgbotapi.KeyboardButton{
+			Text:            match,
+			RequestContact:  false,
+			RequestLocation: false,
 		}
-		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
-		replyMessage, replyMarkup := processor.Reply(&update)
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, replyMessage)
-		msg.ReplyMarkup = replyMarkup
-		//msg.ReplyToMessageID = update.Message.MessageID
-		bot.Send(msg)
+		buttons = append(buttons, button)
+	}
+	return &tgbotapi.ReplyKeyboardMarkup{
+		Keyboard: [][]tgbotapi.KeyboardButton{
+			buttons,
+		},
 	}
 }

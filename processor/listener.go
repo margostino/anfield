@@ -1,7 +1,8 @@
 package processor
 
 import (
-	"github.com/margostino/anfield/source"
+	"github.com/margostino/anfield/io"
+	"github.com/margostino/anfield/kafka"
 	"time"
 )
 
@@ -12,7 +13,7 @@ func listen(url string) {
 	event := NewEvent(metadata)
 	commentaryLoop(event)
 	eventLines := toString(event)
-	source.WriteOnFileIfUpdate(eventLines)
+	io.WriteOnFileIfUpdate(eventLines)
 	waitGroups[url].Done()
 }
 
@@ -36,7 +37,7 @@ func commentaryLoop(event *Event) {
 			break
 		} else {
 			printCommentary(h2h, commentary)
-			publish(event.Metadata, commentary)
+			kafka.Publish(event.Metadata, commentary)
 		}
 
 	}

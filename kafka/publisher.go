@@ -1,23 +1,24 @@
-package processor
+package kafka
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/margostino/anfield/processor"
 	"github.com/segmentio/kafka-go"
 	"log"
 	"strings"
 )
 
-func publish(metadata *Metadata, commentary *Commentary) {
-	var message = Message{
+func Publish(metadata *processor.Metadata, commentary *processor.Commentary) {
+	var message = processor.Message{
 		Metadata: metadata,
 		Data:     commentary,
 	}
 	messageBytes, _ := json.Marshal(message)
 	id := strings.Split(metadata.Url, "/")[8]
 	key := fmt.Sprintf("event-id-%s", id)
-	err := kafkaWriter.WriteMessages(context.Background(),
+	err := processor.KafkaWriter().WriteMessages(context.Background(),
 		kafka.Message{
 			Key:   []byte(key),
 			Value: messageBytes,

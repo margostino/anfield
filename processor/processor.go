@@ -38,6 +38,14 @@ func Close() {
 	}
 }
 
+func KafkaWriter() *kafka.Writer {
+	return kafkaWriter
+}
+
+func KafkaReader() *kafka.Reader {
+	return kafkaReader
+}
+
 func NewKafkaWriter() *kafka.Writer {
 	topic := configuration.Kafka().Topic
 	address := configuration.Kafka().Address
@@ -60,9 +68,9 @@ func NewKafkaReader() *kafka.Reader {
 	consumerGroupId := configuration.Kafka().ConsumerGroupId
 
 	reader := kafka.NewReader(kafka.ReaderConfig{
-		Brokers:  []string{address},
-		GroupID:  consumerGroupId,
-		Topic:    topic,
+		Brokers: []string{address},
+		GroupID: consumerGroupId,
+		Topic:   topic,
 		//MinBytes: 10e3, // 10KB
 		MaxBytes: 10e6, // 10MB
 	})

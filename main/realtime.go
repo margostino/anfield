@@ -3,14 +3,14 @@ package main
 import (
 	"github.com/margostino/anfield/configuration"
 	"github.com/margostino/anfield/processor"
-	"github.com/margostino/anfield/source"
+	"github.com/margostino/anfield/io"
 )
 
 func main() {
-	source.Initialize()
+	io.Initialize()
 	processor.Initialize()
 	webScrapper := processor.WebScrapper()
-	file := source.File()
+	file := io.File()
 
 	if file != nil {
 		defer file.Close()
@@ -29,7 +29,7 @@ func main() {
 	} else {
 		urls = processor.GetInProgressResults()
 	}
-	
+
 	processor.Process(urls)
 	processor.Close()
 }
