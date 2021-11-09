@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/margostino/anfield/common"
 	"github.com/margostino/anfield/configuration"
-	"github.com/margostino/anfield/context"
 	"github.com/margostino/anfield/domain"
 	"github.com/margostino/anfield/kafka"
 	"github.com/margostino/anfield/scrapper"
@@ -50,18 +49,18 @@ func async(url string, waitGroup *sync.WaitGroup) {
 }
 
 func GetFinishedResults() []string {
-	return GetUrlsResult(context.BATCH)
+	return GetUrlsResult(BATCH)
 }
 
 func GetInProgressResults() []string {
-	return GetUrlsResult(context.REALTIME)
+	return GetUrlsResult(REALTIME)
 }
 
 func GetUrlsResult(mode string) []string {
 	var urls []string
 	var url, selector, pattern string
 
-	if mode == context.REALTIME {
+	if mode == REALTIME {
 		selector = configuration.Fixture().Selector
 		pattern = configuration.Fixture().Pattern
 		url = configuration.Source().Url + configuration.Fixture().Url
@@ -75,7 +74,7 @@ func GetUrlsResult(mode string) []string {
 
 	for _, element := range elements {
 		status := element.MustText()
-		if mode == context.BATCH || (mode == context.REALTIME && inProgress(status)) {
+		if mode == BATCH || (mode == REALTIME && inProgress(status)) {
 			urls = append(urls, element.MustProperty("href").String())
 		}
 	}

@@ -2,53 +2,67 @@ package bot
 
 import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/margostino/anfield/common"
 	"github.com/margostino/anfield/configuration"
-	"github.com/margostino/anfield/context"
+	"log"
+	"strings"
 )
+
+var previousMessage string
 
 func Reply(update *tgbotapi.Update) (string, interface{}) {
 	var markup interface{}
 	var reply string
 	message := update.Message.Text
 	username := update.Message.Chat.UserName
-	if message == "/subscribe" {
-		markup = getOptions()
-		reply = "select a match to follow"
-	} else {
-		if common.InSlice(message, context.Matches()) {
-			context.Subscribe(username, message)
-			reply = "Done!"
-		} else {
-			reply = message
-		}
-		markup = nil
+	userId := update.Message.Chat.ID
 
+	if isSubscription(message) {
+		markup, reply = subscriptionReply()
+	} else if shouldSubscribeToMatch(previousMessage, message) {
+		markup, reply = matchSubscriptionReply(message, username)
 	}
+
+	if shouldFollow(message) {
+		markup, reply = followReply()
+	} else if shouldFollowPlayer(previousMessage) {
+		markup, reply = playerFollowerReply(message, userId)
+	}
+
+	if reply == "" {
+		markup, reply = echo(message)
+	}
+
+	previousMessage = message
+
 	return reply, markup
 }
 
-func Send(message string) {
-	for _, chatId := range configuration.Bot().ChatIds {
-		msg := tgbotapi.NewMessage(chatId, message)
-		msg.ReplyMarkup = nil
-		context.Bot().Send(msg) // TODO: filtering by subscription options
+func Consume(updates tgbotapi.UpdatesChannel) {
+	for update := range updates {
+		if update.Message == nil { // ignore any non-Message Updates
+			continue
+		}
+		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
+		replyMessage, replyMarkup := Reply(&update)
+		msg := tgbotapi.NewMessage(update.Message.Chat.ID, replyMessage)
+		msg.ReplyMarkup = replyMarkup
+		//msg.ReplyToMessageID = update.Message.MessageID
+		bot.Send(msg)
 	}
 }
 
-func getOptions() interface{} {
-	buttons := make([]tgbotapi.KeyboardButton, 0)
-	for _, match := range context.Matches() {
-		button := tgbotapi.KeyboardButton{
-			Text:            match,
-			RequestContact:  false,
-			RequestLocation: false,
+func Send(message string) {
+	// TODO: use subscription instead of static IDs from config
+	for _, chatId := range configuration.Bot().ChatIds {
+		if strings.Contains(message, following[chatId]) {
+			msg := tgbotapi.NewMessage(chatId, message)
+			msg.ReplyMarkup = nil
+			Bot().Send(msg) // TODO: filtering by subscription options
 		}
-		buttons = append(buttons, button)
 	}
-	return &tgbotapi.ReplyKeyboardMarkup{
-		Keyboard: [][]tgbotapi.KeyboardButton{
-			buttons,
-		},
-	}
+}
+
+// TODO: define fallback
+func echo(message string) (interface{}, string) {
+	return nil, message
 }
