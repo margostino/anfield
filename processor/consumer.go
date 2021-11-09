@@ -22,5 +22,6 @@ func Consume() {
 
 		commentary := fmt.Sprintf("[%s] # %s\n", message.Data.Time, message.Data.Comment)
 		fmt.Printf("Message at offset %d: %s = %s\n", m.Offset, string(m.Key), commentary)
+		Send(commentary)
 	}
 }

@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/margostino/anfield/common"
 	"github.com/margostino/anfield/configuration"
 	"github.com/margostino/anfield/context"
 	"github.com/margostino/anfield/processor"
@@ -14,7 +13,7 @@ var bot *tgbotapi.BotAPI
 func main() {
 	context.Initialize()
 	processor.Initialize()
-	bot = newBot()
+	bot = context.Bot()
 	updateConfig := tgbotapi.NewUpdate(0)
 	updateConfig.Timeout = 60
 	updates, _ := bot.GetUpdatesChan(updateConfig)
@@ -48,12 +47,4 @@ func reply(updates tgbotapi.UpdatesChannel) {
 		//msg.ReplyToMessageID = update.Message.MessageID
 		bot.Send(msg)
 	}
-}
-
-func newBot() *tgbotapi.BotAPI {
-	bot, error := tgbotapi.NewBotAPI(configuration.Bot().Token)
-	common.Check(error)
-	bot.Debug = true
-	log.Printf("Authorized on account %s", bot.Self.UserName)
-	return bot
 }
