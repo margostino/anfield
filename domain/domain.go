@@ -1,4 +1,4 @@
-package processor
+package domain
 
 type Team struct {
 	Name              string

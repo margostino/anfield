@@ -5,6 +5,7 @@ import (
 	"github.com/go-rod/rod"
 	"github.com/margostino/anfield/common"
 	"github.com/margostino/anfield/configuration"
+	"github.com/margostino/anfield/domain"
 	"strings"
 	"time"
 )
@@ -22,7 +23,7 @@ func getEventDate(url string) string {
 	return eventDate.String()
 }
 
-func getLineups(url string) (*Team, *Team) {
+func getLineups(url string) (*domain.Team, *domain.Team) {
 	lineupsUrl := url + configuration.Lineups().Params
 	homeTeamSelector := configuration.Lineups().HomeTeamSelector
 	awayTeamSelector := configuration.Lineups().AwayTeamSelector
@@ -41,12 +42,12 @@ func getLineups(url string) (*Team, *Team) {
 	awayFormation := getFormation(rawAwayFormation)
 	homeSubstitutes, awaySubstitutes := getSubstitutes(&rawSubstitutes)
 
-	homeTeam := Team{
+	homeTeam := domain.Team{
 		Name:              homeTeamName,
 		Form:              homeFormation,
 		SubstitutePlayers: homeSubstitutes,
 	}
-	awayTeam := Team{
+	awayTeam := domain.Team{
 		Name:              awayTeamName,
 		Form:              awayFormation,
 		SubstitutePlayers: awaySubstitutes,
@@ -101,11 +102,11 @@ func getFormation(raw string) []string {
 	return players
 }
 
-func getMetadata(url string) *Metadata {
+func getMetadata(url string) *domain.Metadata {
 	eventDate := getEventDate(url)
 	homeTeam, awayTeam := getLineups(url)
 	h2h := fmt.Sprintf("%s vs %s", homeTeam.Name, awayTeam.Name)
-	return &Metadata{
+	return &domain.Metadata{
 		Url:      url,
 		H2H:      h2h,
 		Date:     eventDate,
@@ -114,14 +115,19 @@ func getMetadata(url string) *Metadata {
 	}
 }
 
-func publishMetadata(url string) {
+func produce(url string) {
+	go metadata(url)
+	go commentary(url)
+}
+
+func metadata(url string) {
 	metadata := getMetadata(url)
 	metadataBuffer[url] <- metadata
 	waitGroups[url].Done()
 }
 
 // TODO: implement proper stop in loop but scan all partial events
-func publishCommentary(url string) {
+func commentary(url string) {
 	sent := 0
 	countDown := 0
 	endOfEvent := false
@@ -156,7 +162,7 @@ func publishCommentary(url string) {
 
 	fmt.Printf("======== END: %s ========\n", eventName)
 
-	commentaryBuffer[url] <- &Commentary{
+	commentaryBuffer[url] <- &domain.Commentary{
 		Time:    "end",
 		Comment: "end",
 	}
@@ -176,15 +182,15 @@ func getEvents(url string) *[]string {
 	return &events
 }
 
-func normalize(comments []string) []*Commentary {
+func normalize(comments []string) []*domain.Commentary {
 	var time string
-	var commentaries = make([]*Commentary, 0)
+	var commentaries = make([]*domain.Commentary, 0)
 
 	for _, value := range comments {
 		if common.IsTimeCounter(value) {
 			time = value
 		} else {
-			commentary := Commentary{
+			commentary := domain.Commentary{
 				Time:    time,
 				Comment: value,
 			}
@@ -196,7 +202,7 @@ func normalize(comments []string) []*Commentary {
 	return commentaries
 }
 
-func reverse(list *[]*Commentary) {
+func reverse(list *[]*domain.Commentary) {
 	for i := 0; i < len(*list)/2; i++ {
 		j := len(*list) - i - 1
 		(*list)[i], (*list)[j] = (*list)[j], (*list)[i]

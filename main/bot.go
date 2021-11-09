@@ -21,7 +21,7 @@ func main() {
 	updates, _ := bot.GetUpdatesChan(updateConfig)
 	welcome()
 	poll(updates)
-	processor.Close()
+	kafka.Close()
 }
 
 func poll(updates tgbotapi.UpdatesChannel) {

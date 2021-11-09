@@ -2,8 +2,9 @@ package main
 
 import (
 	"github.com/margostino/anfield/configuration"
-	"github.com/margostino/anfield/processor"
 	"github.com/margostino/anfield/io"
+	"github.com/margostino/anfield/kafka"
+	"github.com/margostino/anfield/processor"
 )
 
 func main() {
@@ -31,5 +32,5 @@ func main() {
 	}
 
 	processor.Process(urls)
-	processor.Close()
+	kafka.Close()
 }

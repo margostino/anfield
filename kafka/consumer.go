@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/margostino/anfield/bot"
-	"github.com/margostino/anfield/processor"
+	"github.com/margostino/anfield/domain"
 )
 
 func Consume() {
 	for {
-		var message processor.Message
-		m, err := processor.KafkaReader().ReadMessage(context.Background())
+		var message domain.Message
+		m, err := kafkaReader.ReadMessage(context.Background())
 		if err != nil {
 			break
 		}

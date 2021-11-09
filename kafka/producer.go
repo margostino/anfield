@@ -4,21 +4,21 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/margostino/anfield/processor"
+	"github.com/margostino/anfield/domain"
 	"github.com/segmentio/kafka-go"
 	"log"
 	"strings"
 )
 
-func Publish(metadata *processor.Metadata, commentary *processor.Commentary) {
-	var message = processor.Message{
+func Produce(metadata *domain.Metadata, commentary *domain.Commentary) {
+	var message = domain.Message{
 		Metadata: metadata,
 		Data:     commentary,
 	}
 	messageBytes, _ := json.Marshal(message)
 	id := strings.Split(metadata.Url, "/")[8]
 	key := fmt.Sprintf("event-id-%s", id)
-	err := processor.KafkaWriter().WriteMessages(context.Background(),
+	err := kafkaWriter.WriteMessages(context.Background(),
 		kafka.Message{
 			Key:   []byte(key),
 			Value: messageBytes,

@@ -1,14 +1,16 @@
 package processor
 
 import (
+	"github.com/margostino/anfield/domain"
 	"github.com/margostino/anfield/io"
 	"github.com/margostino/anfield/kafka"
 	"time"
 )
 
 // TODO: calculate stats, bot sender
+// TODO: consumer does not need be a goroutine if it implements a infinite loop, unless we want extra process after that.
 // This aggregation in consumer should happen once by URL/Event
-func listen(url string) {
+func consume(url string) {
 	metadata := <-metadataBuffer[url]
 	event := NewEvent(metadata)
 	commentaryLoop(event)
@@ -17,14 +19,14 @@ func listen(url string) {
 	waitGroups[url].Done()
 }
 
-func NewEvent(metadata *Metadata) *Event {
-	return &Event{
+func NewEvent(metadata *domain.Metadata) *domain.Event {
+	return &domain.Event{
 		Metadata: metadata,
-		Data:     make([]*Commentary, 0),
+		Data:     make([]*domain.Commentary, 0),
 	}
 }
 
-func commentaryLoop(event *Event) {
+func commentaryLoop(event *domain.Event) {
 	url := event.Metadata.Url
 	h2h := event.Metadata.H2H
 	for {
@@ -37,7 +39,7 @@ func commentaryLoop(event *Event) {
 			break
 		} else {
 			printCommentary(h2h, commentary)
-			kafka.Publish(event.Metadata, commentary)
+			kafka.Produce(event.Metadata, commentary)
 		}
 
 	}

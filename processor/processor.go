@@ -5,80 +5,24 @@ import (
 	"github.com/margostino/anfield/common"
 	"github.com/margostino/anfield/configuration"
 	"github.com/margostino/anfield/context"
+	"github.com/margostino/anfield/domain"
+	"github.com/margostino/anfield/kafka"
 	"github.com/margostino/anfield/scrapper"
-	"github.com/segmentio/kafka-go"
-	"log"
 	"strings"
 	"sync"
 )
 
 var webScrapper *scrapper.Scrapper
 var waitGroups map[string]*sync.WaitGroup
-var metadataBuffer map[string]chan *Metadata
-var commentaryBuffer map[string]chan *Commentary
-var kafkaConnection *kafka.Conn
-var kafkaReader *kafka.Reader
-var kafkaWriter *kafka.Writer
+var metadataBuffer map[string]chan *domain.Metadata
+var commentaryBuffer map[string]chan *domain.Commentary
 
 func Initialize() {
+	kafka.Initialize()
 	webScrapper = scrapper.New()
 	waitGroups = make(map[string]*sync.WaitGroup, 0)
-	commentaryBuffer = make(map[string]chan *Commentary)
-	metadataBuffer = make(map[string]chan *Metadata)
-	kafkaWriter = NewKafkaWriter()
-	kafkaReader = NewKafkaReader()
-}
-
-func Close() {
-	if err := kafkaReader.Close(); err != nil {
-		log.Fatal("failed to close kafka reader:", err)
-	}
-	if err := kafkaWriter.Close(); err != nil {
-		log.Fatal("failed to close kafka writer:", err)
-	}
-}
-
-func KafkaWriter() *kafka.Writer {
-	return kafkaWriter
-}
-
-func KafkaReader() *kafka.Reader {
-	return kafkaReader
-}
-
-func NewKafkaWriter() *kafka.Writer {
-	topic := configuration.Kafka().Topic
-	address := configuration.Kafka().Address
-
-	// make a writer that produces to topic-A, using the least-bytes distribution
-	writer := &kafka.Writer{
-		Addr:     kafka.TCP(address),
-		Topic:    topic,
-		Balancer: &kafka.LeastBytes{},
-	}
-
-	//conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
-
-	return writer
-}
-
-func NewKafkaReader() *kafka.Reader {
-	topic := configuration.Kafka().Topic
-	address := configuration.Kafka().Address
-	consumerGroupId := configuration.Kafka().ConsumerGroupId
-
-	reader := kafka.NewReader(kafka.ReaderConfig{
-		Brokers: []string{address},
-		GroupID: consumerGroupId,
-		Topic:   topic,
-		//MinBytes: 10e3, // 10KB
-		MaxBytes: 10e6, // 10MB
-	})
-
-	//conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
-	//conn.SetReadDeadline(time.Now().Add(10 * time.Second))
-
-	return reader
+	commentaryBuffer = make(map[string]chan *domain.Commentary)
+	metadataBuffer = make(map[string]chan *domain.Metadata)
 }
 
 func WebScrapper() *scrapper.Scrapper {
@@ -95,13 +39,11 @@ func Process(urls []string) {
 
 func async(url string, waitGroup *sync.WaitGroup) {
 	waitGroups[url] = common.WaitGroup(3)
-	commentaryBuffer[url] = make(chan *Commentary)
-	metadataBuffer[url] = make(chan *Metadata)
+	commentaryBuffer[url] = make(chan *domain.Commentary)
+	metadataBuffer[url] = make(chan *domain.Metadata)
 
-	go publishMetadata(url)
-	go publishCommentary(url)
-	// TODO: consumer does not need be a goroutine if it implements a infinite loop, unless we want extra process after that.
-	go listen(url)
+	go produce(url)
+	go consume(url)
 
 	waitGroups[url].Wait()
 	waitGroup.Done()
@@ -146,7 +88,7 @@ func inProgress(status string) bool {
 	return common.IsTimeCounter(prefix)
 }
 
-func toString(event *Event) []string {
+func toString(event *domain.Event) []string {
 	lines := make([]string, 0)
 	for _, commentary := range event.Data {
 		line := fmt.Sprintf("%s;%s;%s\n", event.Metadata.Date, commentary.Time, commentary.Comment)
