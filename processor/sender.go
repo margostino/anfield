@@ -10,6 +10,6 @@ func Send(message string) {
 	for _, chatId := range configuration.Bot().ChatIds {
 		msg := tgbotapi.NewMessage(chatId, message)
 		msg.ReplyMarkup = nil
-		context.Bot().Send(msg)
+		context.Bot().Send(msg) // TODO: filtering by subscription options
 	}
 }
