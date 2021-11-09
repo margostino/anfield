@@ -23,3 +23,8 @@ type Event struct {
 	Metadata *Metadata
 	Data     []*Commentary
 }
+
+type Message struct {
+	Metadata *Metadata
+	Data     *Commentary
+}

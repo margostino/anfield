@@ -3,17 +3,24 @@ package processor
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/segmentio/kafka-go"
 	"log"
+	"strings"
 )
 
-func publish(event *Event) {
-	eventJson, _ := json.Marshal(event)
-	// TODO: send partial and not all.
-	err := kafkaWiter.WriteMessages(context.Background(),
+func publish(metadata *Metadata, commentary *Commentary) {
+	var message = Message{
+		Metadata: metadata,
+		Data:     commentary,
+	}
+	messageBytes, _ := json.Marshal(message)
+	id := strings.Split(metadata.Url, "/")[8]
+	key := fmt.Sprintf("event-id-%s", id)
+	err := kafkaWriter.WriteMessages(context.Background(),
 		kafka.Message{
-			Key:   []byte("event-id-" + string(len(event.Data))),
-			Value: []byte(string(eventJson)),
+			Key:   []byte(key),
+			Value: messageBytes,
 		},
 	)
 	if err != nil {

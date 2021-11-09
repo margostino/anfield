@@ -18,14 +18,14 @@ var metadataBuffer map[string]chan *Metadata
 var commentaryBuffer map[string]chan *Commentary
 var kafkaConnection *kafka.Conn
 var kafkaReader *kafka.Reader
-var kafkaWiter *kafka.Writer
+var kafkaWriter *kafka.Writer
 
 func Initialize() {
 	webScrapper = scrapper.New()
 	waitGroups = make(map[string]*sync.WaitGroup, 0)
 	commentaryBuffer = make(map[string]chan *Commentary)
 	metadataBuffer = make(map[string]chan *Metadata)
-	kafkaWiter = NewKafkaWriter()
+	kafkaWriter = NewKafkaWriter()
 	kafkaReader = NewKafkaReader()
 }
 
@@ -33,7 +33,7 @@ func Close() {
 	if err := kafkaReader.Close(); err != nil {
 		log.Fatal("failed to close kafka reader:", err)
 	}
-	if err := kafkaWiter.Close(); err != nil {
+	if err := kafkaWriter.Close(); err != nil {
 		log.Fatal("failed to close kafka writer:", err)
 	}
 }
@@ -63,7 +63,7 @@ func NewKafkaReader() *kafka.Reader {
 		Brokers:  []string{address},
 		GroupID:  consumerGroupId,
 		Topic:    topic,
-		MinBytes: 10e3, // 10KB
+		//MinBytes: 10e3, // 10KB
 		MaxBytes: 10e6, // 10MB
 	})
 

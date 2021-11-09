@@ -36,7 +36,7 @@ func commentaryLoop(event *Event) {
 			break
 		} else {
 			printCommentary(h2h, commentary)
-			publish(event)
+			publish(event.Metadata, commentary)
 		}
 
 	}
