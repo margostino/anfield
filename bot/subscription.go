@@ -39,7 +39,7 @@ func subscriptionReply() (interface{}, string) {
 	return markup, reply
 }
 
-func matchSubscriptionReply(message string, username string) (interface{}, string) {
-	Subscribe(username, message)
+func matchSubscriptionReply(message string, userId int64) (interface{}, string) {
+	Subscribe(userId, message)
 	return nil, "Done!"
 }

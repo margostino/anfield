@@ -2,9 +2,9 @@ package bot
 
 import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/margostino/anfield/common"
 	"github.com/margostino/anfield/configuration"
 	"log"
-	"strings"
 )
 
 var previousMessage string
@@ -13,13 +13,13 @@ func Reply(update *tgbotapi.Update) (string, interface{}) {
 	var markup interface{}
 	var reply string
 	message := update.Message.Text
-	username := update.Message.Chat.UserName
+	//username := update.Message.Chat.UserName
 	userId := update.Message.Chat.ID
 
 	if isSubscription(message) {
 		markup, reply = subscriptionReply()
 	} else if shouldSubscribeToMatch(previousMessage, message) {
-		markup, reply = matchSubscriptionReply(message, username)
+		markup, reply = matchSubscriptionReply(message, userId)
 	}
 
 	if shouldFollow(message) {
@@ -54,7 +54,7 @@ func Consume(updates tgbotapi.UpdatesChannel) {
 func Send(message string) {
 	// TODO: use subscription instead of static IDs from config
 	for _, chatId := range configuration.Bot().ChatIds {
-		if strings.Contains(message, following[chatId]) {
+		if common.InSlice(message, following[chatId]) {
 			msg := tgbotapi.NewMessage(chatId, message)
 			msg.ReplyMarkup = nil
 			Bot().Send(msg) // TODO: filtering by subscription options

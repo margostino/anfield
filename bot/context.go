@@ -10,8 +10,8 @@ import (
 
 var bot *tgbotapi.BotAPI
 var matches = make([]string, 0)
-var subscriptions = make(map[string]string)
-var following = make(map[int64]string)
+var subscriptions = make(map[int64][]string)
+var following = make(map[int64][]string)
 
 func Matches() []string {
 	return matches
@@ -40,12 +40,14 @@ func welcome() {
 	}
 }
 
-func Subscribe(username string, eventId string) {
-	subscriptions[username] = eventId
+func Subscribe(userId int64, eventId string) {
+	if !common.InSlice(eventId, subscriptions[userId]) {
+		subscriptions[userId] = append(subscriptions[userId], eventId)
+	}
 }
 
 func Follow(userId int64, player string) {
-	following[userId] = player
+	following[userId] = append(following[userId], player)
 }
 
 func Bot() *tgbotapi.BotAPI {
