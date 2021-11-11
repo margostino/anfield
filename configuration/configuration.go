@@ -8,21 +8,29 @@ import (
 )
 
 var configFile = "./configuration.yml"
-var config = getConfig(configFile)
+var rulesFile = "./rules.yml"
+var config = getConfig(configFile, rulesFile)
 
-func getConfig(file string) *Configuration {
+func getConfig(configFile string, rulesFile string) *Configuration {
 	var configuration Configuration
+	var rules Rules
+	unmarshal(configFile, &configuration)
+	unmarshal(rulesFile, &rules)
+	configuration.Rules = &rules
+	return &configuration
+}
+
+func unmarshal(file string, out interface{}) {
 	ymlFile, err := ioutil.ReadFile(file)
 
 	if err != nil {
 		log.Printf("yamlFile.Get err   #%v ", err)
 	}
 	ymlFile = []byte(os.ExpandEnv(string(ymlFile)))
-	err = yaml.Unmarshal(ymlFile, &configuration)
+	err = yaml.Unmarshal(ymlFile, out)
 	if err != nil {
 		log.Fatalf("Unmarshal: %v", err)
 	}
-	return &configuration
 }
 
 func Config() *Configuration {

@@ -74,4 +74,15 @@ type Configuration struct {
 	Bot        *BotConfig        `yaml:"bot"`
 	Realtime   *RealtimeConfig   `yaml:"realtime"`
 	Kafka      *KafkaConfig      `yaml:"kafka"`
+	Rules      *Rules
+}
+
+type Rule struct {
+	Pattern string `yaml:"pattern"`
+	Score   int    `yaml:"score"`
+}
+
+type Rules struct {
+	Team   []Rule `yaml:"team"`
+	Player []Rule `yaml:"player"`
 }

@@ -14,9 +14,8 @@ func consume(url string) {
 	metadata := <-metadataBuffer[url]
 	event := NewEvent(metadata)
 	commentaryLoop(event)
-	eventLines := toString(event)
-	io.WriteOnFileIfUpdate(eventLines)
-	waitGroups[url].Done()
+	save(event)
+	done(url)
 }
 
 func NewEvent(metadata *domain.Metadata) *domain.Event {
@@ -43,4 +42,13 @@ func commentaryLoop(event *domain.Event) {
 		}
 
 	}
+}
+
+func save(event *domain.Event) {
+	eventLines := toString(event)
+	io.WriteOnFileIfUpdate(eventLines)
+}
+
+func done(url string) {
+	waitGroups[url].Done()
 }
