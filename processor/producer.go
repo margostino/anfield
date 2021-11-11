@@ -55,12 +55,12 @@ func getLineups(url string) (*domain.Team, *domain.Team) {
 	return &homeTeam, &awayTeam
 }
 
-func getSubstitutes(elements *rod.Elements) ([]string, []string) {
+func getSubstitutes(elements *rod.Elements) ([]domain.Player, []domain.Player) {
 	parseSubstitute := false
 	players := make([]string, 0)
 	normalizedPlayers := make([]string, 0)
-	homeSubstitutes := make([]string, 0)
-	awaySubstitutes := make([]string, 0)
+	homeSubstitutes := make([]domain.Player, 0)
+	awaySubstitutes := make([]domain.Player, 0)
 
 	for _, element := range *elements {
 		value := element.MustText()
@@ -82,24 +82,31 @@ func getSubstitutes(elements *rod.Elements) ([]string, []string) {
 
 	for i, player := range normalizedPlayers {
 		if common.Even(i) {
-			homeSubstitutes = append(homeSubstitutes, player)
+			homeSubstitutes = append(homeSubstitutes, *newPlayer(player))
 		} else {
-			awaySubstitutes = append(awaySubstitutes, player)
+			awaySubstitutes = append(awaySubstitutes, *newPlayer(player))
 		}
 	}
 
 	return homeSubstitutes, awaySubstitutes
 }
 
-func getFormation(raw string) []string {
-	players := make([]string, 0)
+func getFormation(raw string) []domain.Player {
+	players := make([]domain.Player, 0)
 	values := strings.Split(raw, "\n")
 	for _, value := range values {
 		if !common.IsFormationNumber(value) {
-			players = append(players, value)
+			players = append(players, *newPlayer(value))
 		}
 	}
 	return players
+}
+
+func newPlayer(name string) *domain.Player {
+	return &domain.Player{
+		Name:  name,
+		Score: 0,
+	}
 }
 
 func getMetadata(url string) *domain.Metadata {

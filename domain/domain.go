@@ -1,9 +1,14 @@
 package domain
 
+type Player struct {
+	Name  string
+	Score float64
+}
+
 type Team struct {
 	Name              string
-	Form              []string
-	SubstitutePlayers []string
+	Form              []Player
+	SubstitutePlayers []Player
 }
 
 type Metadata struct {
