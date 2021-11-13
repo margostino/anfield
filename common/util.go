@@ -98,7 +98,7 @@ func IsTimeCounter(value string) bool {
 }
 
 func IsFormationNumber(value string) bool {
-	isNumber, _ := regexp.MatchString("[1-9]+$", value)
+	isNumber, _ := regexp.MatchString("[0-9]+$", value)
 	return isNumber
 }
 

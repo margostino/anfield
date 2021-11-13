@@ -49,6 +49,14 @@ func Realtime() *RealtimeConfig {
 	return config.Realtime
 }
 
+func TeamRules() []Rule {
+	return config.Rules.Team
+}
+
+func PlayerRules() []Rule {
+	return config.Rules.Player
+}
+
 func Data() *DataConfig {
 	return config.Data
 }

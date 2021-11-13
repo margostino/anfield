@@ -28,7 +28,7 @@ func getLineups(url string) (*domain.Team, *domain.Team) {
 	homeTeamSelector := configuration.Lineups().HomeTeamSelector
 	awayTeamSelector := configuration.Lineups().AwayTeamSelector
 	homeFormSelector := configuration.Lineups().HomeSelector
-	awayFormSelector := configuration.Lineups().HomeSelector
+	awayFormSelector := configuration.Lineups().AwaySelector
 	substituteSelector := configuration.Lineups().SubstituteSelector
 
 	page := webScrapper.GoPage(lineupsUrl)
