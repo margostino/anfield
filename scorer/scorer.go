@@ -28,7 +28,7 @@ func Initialize() {
 }
 
 func CalculateScoring(homeTeam *domain.Team, awayTeam *domain.Team, commentary *domain.Commentary) {
-	comment := commentary.Comment
+	comment := "Jarrod Bowen is leaving the field to be replaced by Vladimir Coufal in a tactical substitution." //commentary.Comment
 	rules, err := getRule(comment)
 
 	if err == nil {
@@ -43,10 +43,6 @@ func CalculateScoring(homeTeam *domain.Team, awayTeam *domain.Team, commentary *
 					stats.Players[matchedPlayers[rule.Pos-1]].Score += rule.Score
 				}
 			}
-		}
-
-		if len(matchedPlayers) > 1 {
-			println(comment)
 		}
 	}
 
