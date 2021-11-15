@@ -40,7 +40,7 @@ func NewKafkaWriter() *kafka.Writer {
 	writer := &kafka.Writer{
 		Addr:     kafka.TCP(address),
 		Topic:    topic,
-		Balancer: &kafka.LeastBytes{},
+		Balancer: &kafka.RoundRobin{},
 	}
 
 	//conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
@@ -58,7 +58,7 @@ func NewKafkaReader() *kafka.Reader {
 		GroupID: consumerGroupId,
 		Topic:   topic,
 		//MinBytes: 10e3, // 10KB
-		MaxBytes: 10e6, // 10MB
+		//MaxBytes: 10e6, // 10MB
 	})
 
 	//conn.SetReadDeadline(time.Now().Add(10 * time.Second))

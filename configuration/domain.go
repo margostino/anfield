@@ -80,6 +80,7 @@ type Configuration struct {
 type Rule struct {
 	Pattern string  `yaml:"pattern"`
 	Score   float64 `yaml:"score"`
+	Pos     int     `yaml:"pos"`
 }
 
 type Rules struct {

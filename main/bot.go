@@ -19,5 +19,5 @@ func main() {
 
 func poll(updates tgbotapi.UpdatesChannel) {
 	go kafka.Consume()
- 	bot.Consume(updates)
+	bot.Consume(updates)
 }
