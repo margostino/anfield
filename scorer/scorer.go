@@ -6,6 +6,7 @@ import (
 	"github.com/margostino/anfield/domain"
 	"log"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -18,6 +19,8 @@ type Stats struct {
 	Players map[string]*Scoring
 }
 
+const BALL_POSSESION_RULE = "ball possession"
+
 var stats *Stats
 var playersRegex *regexp.Regexp
 
@@ -28,8 +31,19 @@ func Initialize() {
 }
 
 func CalculateScoring(homeTeam *domain.Team, awayTeam *domain.Team, commentary *domain.Commentary) {
-	comment := "Jarrod Bowen is leaving the field to be replaced by Vladimir Coufal in a tactical substitution." //commentary.Comment
+	comment := commentary.Comment
 	rules, err := getRule(comment)
+
+	lowerComment := strings.ToLower(comment)
+	teamsPosessionRaw := strings.ReplaceAll(lowerComment, BALL_POSSESION_RULE, "")
+	teamsPosession := strings.Split(teamsPosessionRaw, ",")
+
+	for _, teamPosession := range teamsPosession {
+		name := strings.Split(teamPosession, ":")[0]
+		posessionPercentage := strings.Split(teamPosession, ":")[1]
+		posession := strings.ReplaceAll(posessionPercentage, "%", "")
+		posessionValue, _ := strconv.Atoi(posession)
+	}
 
 	if err == nil {
 		mergePlayers(homeTeam, awayTeam)
@@ -87,19 +101,29 @@ func appendPlayers(team *domain.Team) {
 	}
 }
 
+func isBallPossesionRule(comment string) bool {
+	return strings.Contains(comment, BALL_POSSESION_RULE)
+}
+
+func ruleLookup(comment string, rules []configuration.Rule) []configuration.Rule {
+	var result = make([]configuration.Rule, 0)
+	for _, rule := range rules {
+		if matchRule(&rule, comment) {
+			result = append(result, rule)
+		}
+	}
+	return result
+}
+
 func getRule(comment string) ([]configuration.Rule, error) {
 	var rules = make([]configuration.Rule, 0)
 	lowerComment := strings.ToLower(comment)
 
-	for _, rule := range configuration.PlayerRules() {
-		if matchRule(&rule, lowerComment) {
-			rules = append(rules, rule)
-		}
-	}
-	for _, rule := range configuration.TeamRules() {
-		if matchRule(&rule, lowerComment) {
-			rules = append(rules, rule)
-		}
+	if isBallPossesionRule(lowerComment) {
+		dynamicRule := configuration.NewDynamicRule(BALL_POSSESION_RULE, 1)
+		rules = append(rules, *dynamicRule)
+	} else {
+		rules = append(rules, ruleLookup(lowerComment, configuration.ScoringRules())...)
 	}
 
 	if len(rules) == 0 {

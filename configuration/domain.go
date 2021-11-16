@@ -2,6 +2,11 @@ package configuration
 
 import "time"
 
+const (
+	DYNAMIC_RULE = "dynamic"
+	STATIC_RULE  = "static"
+)
+
 type ResultsConfig struct {
 	Url      string `yaml:"url"`
 	Selector string `yaml:"selector"`
@@ -74,16 +79,16 @@ type Configuration struct {
 	Bot        *BotConfig        `yaml:"bot"`
 	Realtime   *RealtimeConfig   `yaml:"realtime"`
 	Kafka      *KafkaConfig      `yaml:"kafka"`
-	Rules      *Rules
+	Rules      []Rule
 }
 
 type Rule struct {
 	Pattern string  `yaml:"pattern"`
 	Score   float64 `yaml:"score"`
 	Pos     int     `yaml:"pos"`
+	Type    string  `yaml:"type"`
 }
 
 type Rules struct {
-	Team   []Rule `yaml:"team"`
-	Player []Rule `yaml:"player"`
+	ScoringRules []Rule `yaml:"scoringRules"`
 }

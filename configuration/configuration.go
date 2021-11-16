@@ -16,7 +16,7 @@ func getConfig(configFile string, rulesFile string) *Configuration {
 	var rules Rules
 	unmarshal(configFile, &configuration)
 	unmarshal(rulesFile, &rules)
-	configuration.Rules = &rules
+	configuration.Rules = rules.ScoringRules
 	return &configuration
 }
 
@@ -49,12 +49,8 @@ func Realtime() *RealtimeConfig {
 	return config.Realtime
 }
 
-func TeamRules() []Rule {
-	return config.Rules.Team
-}
-
-func PlayerRules() []Rule {
-	return config.Rules.Player
+func ScoringRules() []Rule {
+	return config.Rules
 }
 
 func Data() *DataConfig {
@@ -87,4 +83,12 @@ func Info() *InfoConfig {
 
 func AppPath() string {
 	return config.AppPath
+}
+
+func NewDynamicRule(pattern string, pos int) *Rule {
+	return &Rule{
+		Pattern: pattern,
+		Type:    DYNAMIC_RULE,
+		Pos:     pos,
+	}
 }
