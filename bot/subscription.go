@@ -23,10 +23,7 @@ func getSubscriptionOptions() interface{} {
 }
 
 func isSubscription(message string) bool {
-	if message == "/subscribe" {
-		return true
-	}
-	return false
+	return message == "/subscribe"
 }
 
 func shouldSubscribeToMatch(previousMessage string, message string) bool {

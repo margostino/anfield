@@ -57,7 +57,7 @@ func Bot() *tgbotapi.BotAPI {
 func newBot() *tgbotapi.BotAPI {
 	bot, error := tgbotapi.NewBotAPI(configuration.Bot().Token)
 	common.Check(error)
-	bot.Debug = true
+	//bot.Debug = true
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 	return bot
 }

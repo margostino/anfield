@@ -19,10 +19,10 @@ type Stats struct {
 	Players map[string]*Scoring
 }
 
-const BALL_POSSESION_RULE = "ball possession"
+const BALL_POSSESSION_RULE = "ball possession"
 
 var stats *Stats
-var playersRegex *regexp.Regexp
+var entityRegex *regexp.Regexp
 
 func Initialize() {
 	stats = &Stats{
@@ -31,30 +31,19 @@ func Initialize() {
 }
 
 func CalculateScoring(homeTeam *domain.Team, awayTeam *domain.Team, commentary *domain.Commentary) {
-	comment := commentary.Comment
-	rules, err := getRule(comment)
-
-	lowerComment := strings.ToLower(comment)
-	teamsPosessionRaw := strings.ReplaceAll(lowerComment, BALL_POSSESION_RULE, "")
-	teamsPosession := strings.Split(teamsPosessionRaw, ",")
-
-	for _, teamPosession := range teamsPosession {
-		name := strings.Split(teamPosession, ":")[0]
-		posessionPercentage := strings.Split(teamPosession, ":")[1]
-		posession := strings.ReplaceAll(posessionPercentage, "%", "")
-		posessionValue, _ := strconv.Atoi(posession)
-	}
+	comment := strings.ToLower("ball possession: west ham: 35%, liverpool: 65%.") //strings.ToLower(commentary.Comment)
+	rules, err := getRules(comment)
 
 	if err == nil {
 		mergePlayers(homeTeam, awayTeam)
-		matchedPlayers := playersRegex.FindAllString(comment, -1)
+		matchedEntities := entityRegex.FindAllString(comment, -1)
 
-		if matchedPlayers != nil {
+		if matchedEntities != nil {
 			for _, rule := range rules {
-				if len(matchedPlayers) == 1 {
-					stats.Players[matchedPlayers[0]].Score += rule.Score
-				} else if len(matchedPlayers) >= rule.Pos {
-					stats.Players[matchedPlayers[rule.Pos-1]].Score += rule.Score
+				if rule.Type == configuration.STATIC_RULE {
+					applyStaticRule(matchedEntities, &rule)
+				} else {
+					applyDynamicRule(matchedEntities, comment, &rule)
 				}
 			}
 		}
@@ -64,6 +53,41 @@ func CalculateScoring(homeTeam *domain.Team, awayTeam *domain.Team, commentary *
 	// TODO: validate 2 players in one comment
 	// TODO: validate team scoring
 	// TODO: ball possession
+}
+
+func getTeamsPossession(comment string) map[string]float64 {
+	var teamsPossession = make(map[string]float64)
+	teamsPossessionRaw := strings.ReplaceAll(comment, BALL_POSSESSION_RULE+":", "")
+	splittedTeamsPossession := strings.Split(teamsPossessionRaw, ",")
+
+	for _, possessionRaw := range splittedTeamsPossession {
+		name := strings.TrimSpace(strings.Split(possessionRaw, ":")[0])
+		posessionPercentage := strings.TrimSpace(strings.Split(possessionRaw, ":")[1])
+		posessionString := strings.ReplaceAll(posessionPercentage, "%", "")
+		posessionNumber, _ := strconv.ParseFloat(posessionString, 64)
+		teamsPossession[name] = posessionNumber
+	}
+
+	return teamsPossession
+}
+
+func applyDynamicRule(entities []string, comment string, rule *configuration.Rule) {
+	teamsPossession := getTeamsPossession(comment)
+	for _, entity := range entities {
+		for _, player := range stats.Players {
+			if strings.Contains(player.Team, entity) {
+				player.Score += rule.Score * teamsPossession[entity] / 100
+			}
+		}
+	}
+}
+
+func applyStaticRule(entities []string, rule *configuration.Rule) {
+	if len(entities) == 1 {
+		stats.Players[entities[0]].Score += rule.Score
+	} else if len(entities) >= rule.Pos {
+		stats.Players[entities[rule.Pos-1]].Score += rule.Score
+	}
 }
 
 func joinPlayers() string {
@@ -80,29 +104,40 @@ func mergePlayers(homeTeam *domain.Team, awayTeam *domain.Team) {
 	if len(stats.Players) == 0 {
 		appendPlayers(homeTeam)
 		appendPlayers(awayTeam)
-		newPlayersRegex()
+		newEntityRegex(homeTeam.Name, awayTeam.Name)
 	}
 }
 
-func newPlayersRegex() {
+func newEntityRegex(homeTeam string, awayTeam string) {
 	values := joinPlayers()
-	pattern := "(" + values + ")+"
-	playersRegex = regexp.MustCompile(pattern)
+	appendTeamNames(homeTeam, &values)
+	appendTeamNames(awayTeam, &values)
+	pattern := "(" + strings.ToLower(values) + "){1}"
+	entityRegex = regexp.MustCompile(pattern)
+}
+
+func appendTeamNames(teamName string, values *string) {
+	*values += "|" + teamName
+	teamParts := strings.Split(teamName, " ")
+	if len(teamParts) == 2 {
+		*values += "|" + teamParts[0]
+	} else if len(teamParts) == 3 {
+		*values += "|" + teamParts[0] + " " + teamParts[1]
+		*values += "|" + teamParts[0]
+	}
 }
 
 func appendPlayers(team *domain.Team) {
+	teamName := strings.ToLower(team.Name)
 	allPlayers := append(team.Form, team.SubstitutePlayers...)
 	for _, player := range allPlayers {
+		playerName := strings.ToLower(player.Name)
 		scoring := &Scoring{
-			Team:  team.Name,
+			Team:  teamName,
 			Score: player.Score,
 		}
-		stats.Players[player.Name] = scoring
+		stats.Players[playerName] = scoring
 	}
-}
-
-func isBallPossesionRule(comment string) bool {
-	return strings.Contains(comment, BALL_POSSESION_RULE)
 }
 
 func ruleLookup(comment string, rules []configuration.Rule) []configuration.Rule {
@@ -115,28 +150,23 @@ func ruleLookup(comment string, rules []configuration.Rule) []configuration.Rule
 	return result
 }
 
-func getRule(comment string) ([]configuration.Rule, error) {
+func getRules(comment string) ([]configuration.Rule, error) {
 	var rules = make([]configuration.Rule, 0)
-	lowerComment := strings.ToLower(comment)
-
-	if isBallPossesionRule(lowerComment) {
-		dynamicRule := configuration.NewDynamicRule(BALL_POSSESION_RULE, 1)
-		rules = append(rules, *dynamicRule)
-	} else {
-		rules = append(rules, ruleLookup(lowerComment, configuration.ScoringRules())...)
-	}
+	rules = append(rules, ruleLookup(comment, configuration.ScoringRules())...)
 
 	if len(rules) == 0 {
-		log.Printf("MISSING RULE %s", lowerComment)
+		log.Printf("MISSING RULE %s", comment)
 		return rules, errors.New("missing rule")
 	}
 
 	return rules, nil
 }
 
-func matchRule(rule *configuration.Rule, commentary string) bool {
-	if strings.Contains(commentary, rule.Pattern) {
-		return true
+func matchRule(rule *configuration.Rule, comment string) bool {
+	if rule.Type == configuration.STATIC_RULE {
+		return strings.Contains(comment, rule.Pattern)
+	} else {
+		match, _ := regexp.MatchString(rule.Pattern, comment)
+		return match
 	}
-	return false
 }

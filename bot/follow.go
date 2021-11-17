@@ -1,10 +1,7 @@
 package bot
 
 func shouldFollow(message string) bool {
-	if message == "/follow" {
-		return true
-	}
-	return false
+	return message == "/follow"
 }
 
 func followReply() (interface{}, string) {
