@@ -31,19 +31,24 @@ func Initialize() {
 }
 
 func CalculateScoring(homeTeam *domain.Team, awayTeam *domain.Team, commentary *domain.Commentary) {
-	comment := strings.ToLower("ball possession: west ham: 35%, liverpool: 65%.") //strings.ToLower(commentary.Comment)
+	var teamsPossession = make(map[string]float64)
+	comment := strings.ToLower(commentary.Comment)
 	rules, err := getRules(comment)
 
 	if err == nil {
 		mergePlayers(homeTeam, awayTeam)
 		matchedEntities := entityRegex.FindAllString(comment, -1)
 
+		if isBallPossession(comment) {
+			teamsPossession = getTeamsPossession(comment)
+		}
+
 		if matchedEntities != nil {
 			for _, rule := range rules {
 				if rule.Type == configuration.STATIC_RULE {
 					applyStaticRule(matchedEntities, &rule)
 				} else {
-					applyDynamicRule(matchedEntities, comment, &rule)
+					applyDynamicRule(matchedEntities, teamsPossession, &rule)
 				}
 			}
 		}
@@ -71,8 +76,7 @@ func getTeamsPossession(comment string) map[string]float64 {
 	return teamsPossession
 }
 
-func applyDynamicRule(entities []string, comment string, rule *configuration.Rule) {
-	teamsPossession := getTeamsPossession(comment)
+func applyDynamicRule(entities []string, teamsPossession map[string]float64, rule *configuration.Rule) {
 	for _, entity := range entities {
 		for _, player := range stats.Players {
 			if strings.Contains(player.Team, entity) {
@@ -160,6 +164,10 @@ func getRules(comment string) ([]configuration.Rule, error) {
 	}
 
 	return rules, nil
+}
+
+func isBallPossession(comment string) bool {
+	return strings.Contains(comment, BALL_POSSESSION_RULE)
 }
 
 func matchRule(rule *configuration.Rule, comment string) bool {
