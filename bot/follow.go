@@ -1,5 +1,9 @@
 package bot
 
+import (
+	"github.com/margostino/anfield/common"
+)
+
 func shouldFollow(message string) bool {
 	return message == "/follow"
 }
@@ -16,4 +20,8 @@ func shouldFollowPlayer(previousMessage string) bool {
 func playerFollowerReply(message string, userId int64) (interface{}, string) {
 	Follow(userId, message)
 	return nil, "Done!"
+}
+
+func IsFollowing(message string, chatId int64) bool {
+	return common.InSlice(message, Following()[chatId])
 }

@@ -31,27 +31,13 @@ func Initialize() {
 }
 
 func CalculateScoring(homeTeam *domain.Team, awayTeam *domain.Team, commentary *domain.Commentary) {
-	var teamsPossession = make(map[string]float64)
 	comment := strings.ToLower(commentary.Comment)
 	rules, err := getRules(comment)
 
 	if err == nil {
 		mergePlayers(homeTeam, awayTeam)
-		matchedEntities := entityRegex.FindAllString(comment, -1)
-
-		if isBallPossession(comment) {
-			teamsPossession = getTeamsPossession(comment)
-		}
-
-		if matchedEntities != nil {
-			for _, rule := range rules {
-				if rule.Type == configuration.STATIC_RULE {
-					applyStaticRule(matchedEntities, &rule)
-				} else {
-					applyDynamicRule(matchedEntities, teamsPossession, &rule)
-				}
-			}
-		}
+		entities := entityRegex.FindAllString(comment, -1)
+		applyScoring(comment, entities, rules)
 	}
 
 	// TODO: validate VAR
@@ -60,37 +46,48 @@ func CalculateScoring(homeTeam *domain.Team, awayTeam *domain.Team, commentary *
 	// TODO: ball possession
 }
 
-func getTeamsPossession(comment string) map[string]float64 {
-	var teamsPossession = make(map[string]float64)
-	teamsPossessionRaw := strings.ReplaceAll(comment, BALL_POSSESSION_RULE+":", "")
-	splittedTeamsPossession := strings.Split(teamsPossessionRaw, ",")
+func applyScoring(comment string, entities []string, rules []configuration.Rule) {
+	ratios := getRatios(comment)
 
-	for _, possessionRaw := range splittedTeamsPossession {
-		name := strings.TrimSpace(strings.Split(possessionRaw, ":")[0])
-		posessionPercentage := strings.TrimSpace(strings.Split(possessionRaw, ":")[1])
-		posessionString := strings.ReplaceAll(posessionPercentage, "%", "")
-		posessionNumber, _ := strconv.ParseFloat(posessionString, 64)
-		teamsPossession[name] = posessionNumber
-	}
-
-	return teamsPossession
-}
-
-func applyDynamicRule(entities []string, teamsPossession map[string]float64, rule *configuration.Rule) {
-	for _, entity := range entities {
-		for _, player := range stats.Players {
-			if strings.Contains(player.Team, entity) {
-				player.Score += rule.Score * teamsPossession[entity] / 100
-			}
+	if entities != nil {
+		for _, rule := range rules {
+			applyRule(entities, ratios, &rule)
 		}
 	}
 }
 
-func applyStaticRule(entities []string, rule *configuration.Rule) {
-	if len(entities) == 1 {
-		stats.Players[entities[0]].Score += rule.Score
-	} else if len(entities) >= rule.Pos {
-		stats.Players[entities[rule.Pos-1]].Score += rule.Score
+func getRatios(comment string) map[string]float64 {
+	var ratios = make(map[string]float64)
+	if isBallPossession(comment) {
+		updateTeamsPossession(comment, &ratios)
+	}
+	return ratios
+}
+
+func updateTeamsPossession(comment string, ratios *map[string]float64) {
+	teamsPossessionRaw := strings.ReplaceAll(comment, BALL_POSSESSION_RULE+":", "")
+	teamsPossessionParts := strings.Split(teamsPossessionRaw, ",")
+
+	for _, possessionRaw := range teamsPossessionParts {
+		name := strings.TrimSpace(strings.Split(possessionRaw, ":")[0])
+		posessionPercentage := strings.TrimSpace(strings.Split(possessionRaw, ":")[1])
+		posessionString := strings.ReplaceAll(posessionPercentage, "%", "")
+		posessionNumber, _ := strconv.ParseFloat(posessionString, 64)
+		(*ratios)[name] = posessionNumber
+	}
+}
+
+func applyRule(entities []string, ratios map[string]float64, rule *configuration.Rule) {
+	for _, entity := range entities {
+		for key, value := range stats.Players {
+			match := strings.Contains(key, entity) || strings.Contains(value.Team, entity)
+			ratio, hasRatio := ratios[entity]
+			if match && hasRatio {
+				value.Score += rule.Score * ratio / 100
+			} else {
+				value.Score += rule.Score
+			}
+		}
 	}
 }
 

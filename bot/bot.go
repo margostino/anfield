@@ -2,7 +2,6 @@ package bot
 
 import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/margostino/anfield/common"
 	"github.com/margostino/anfield/configuration"
 	"log"
 )
@@ -54,7 +53,7 @@ func Consume(updates tgbotapi.UpdatesChannel) {
 func Send(message string) {
 	// TODO: use subscription instead of static IDs from config
 	for _, chatId := range configuration.Bot().ChatIds {
-		if common.InSlice(message, following[chatId]) {
+		if IsFollowing(message, chatId) {
 			msg := tgbotapi.NewMessage(chatId, message)
 			msg.ReplyMarkup = nil
 			Bot().Send(msg) // TODO: filtering by subscription options
