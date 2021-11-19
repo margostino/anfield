@@ -105,3 +105,18 @@ func IsFormationNumber(value string) bool {
 func Even(number int) bool {
 	return number%2 == 0
 }
+
+func Remove(slice []string, element string) []string {
+	var newSlice []string
+	for _, value := range slice {
+		if element != value {
+			newSlice = append(newSlice, value)
+		}
+	}
+
+	if newSlice != nil {
+		return newSlice
+	}
+
+	return slice
+}

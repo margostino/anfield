@@ -27,6 +27,12 @@ func Reply(update *tgbotapi.Update) (string, interface{}) {
 		markup, reply = playerFollowerReply(message, userId)
 	}
 
+	if shouldUnfollow(message) {
+		markup, reply = unfollowReply()
+	} else if shouldUnfollowPlayer(previousMessage) {
+		markup, reply = playerUnfollowerReply(message, userId)
+	}
+
 	if reply == "" {
 		markup, reply = echo(message)
 	}

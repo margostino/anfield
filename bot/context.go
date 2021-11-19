@@ -50,6 +50,10 @@ func Follow(userId int64, player string) {
 	following[userId] = append(following[userId], player)
 }
 
+func Unfollow(userId int64, player string) {
+	following[userId] = common.Remove(following[userId], player)
+}
+
 func Bot() *tgbotapi.BotAPI {
 	return bot
 }
