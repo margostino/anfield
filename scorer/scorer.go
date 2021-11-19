@@ -175,3 +175,7 @@ func matchRule(rule *configuration.Rule, comment string) bool {
 		return match
 	}
 }
+
+func Scorings() *Stats {
+	return stats
+}

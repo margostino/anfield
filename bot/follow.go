@@ -12,12 +12,12 @@ func shouldUnfollow(message string) bool {
 	return message == "/unfollow"
 }
 
-func followReply() (interface{}, string) {
+func followQuestion() (interface{}, string) {
 	reply := "Which player would do like to follow?"
 	return nil, reply
 }
 
-func unfollowReply() (interface{}, string) {
+func unfollowQuestion() (interface{}, string) {
 	reply := "Which player would do like to unfollow?"
 	return nil, reply
 }
@@ -30,19 +30,19 @@ func shouldUnfollowPlayer(previousMessage string) bool {
 	return shouldUnfollow(previousMessage)
 }
 
-func playerFollowerReply(message string, userId int64) (interface{}, string) {
+func followReply(message string, userId int64) (interface{}, string) {
 	Follow(userId, message)
 	return nil, "Done!"
 }
 
-func playerUnfollowerReply(message string, userId int64) (interface{}, string) {
+func unfollowReply(message string, userId int64) (interface{}, string) {
 	Unfollow(userId, message)
 	return nil, "Done!"
 }
 
 func IsFollowing(message string, chatId int64) bool {
 	lowerMessage := strings.ToLower(message)
-	for _, value := range Following()[chatId] {
+	for _, value := range following[chatId] {
 		lowerValue := strings.ToLower(value)
 		if strings.Contains(lowerMessage, lowerValue) {
 			return true

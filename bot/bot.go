@@ -22,15 +22,19 @@ func Reply(update *tgbotapi.Update) (string, interface{}) {
 	}
 
 	if shouldFollow(message) {
-		markup, reply = followReply()
+		markup, reply = followQuestion()
 	} else if shouldFollowPlayer(previousMessage) {
-		markup, reply = playerFollowerReply(message, userId)
+		markup, reply = followReply(message, userId)
 	}
 
 	if shouldUnfollow(message) {
-		markup, reply = unfollowReply()
+		markup, reply = unfollowQuestion()
 	} else if shouldUnfollowPlayer(previousMessage) {
-		markup, reply = playerUnfollowerReply(message, userId)
+		markup, reply = unfollowReply(message, userId)
+	}
+
+	if shouldShowStats(message) {
+		markup, reply = showStats(userId)
 	}
 
 	if reply == "" {

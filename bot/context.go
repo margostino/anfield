@@ -65,7 +65,3 @@ func newBot() *tgbotapi.BotAPI {
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 	return bot
 }
-
-func Following() map[int64][]string {
-	return following
-}
