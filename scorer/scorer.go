@@ -11,8 +11,9 @@ import (
 )
 
 type Scoring struct {
-	Team  string
-	Score float64
+	Player string
+	Team   string
+	Score  float64
 }
 
 type Stats struct {
@@ -79,13 +80,13 @@ func updateTeamsPossession(comment string, ratios *map[string]float64) {
 
 func applyRule(entities []string, ratios map[string]float64, rule *configuration.Rule) {
 	for _, entity := range entities {
-		for key, value := range stats.Players {
-			match := strings.Contains(key, entity) || strings.Contains(value.Team, entity)
+		for _, scoring := range stats.Players {
+			match := matchTeamOrPlayer(entity, scoring)
 			ratio, hasRatio := ratios[entity]
 			if match && hasRatio {
-				value.Score += rule.Score * ratio / 100
+				scoring.Score += rule.Score * ratio / 100
 			} else {
-				value.Score += rule.Score
+				scoring.Score += rule.Score
 			}
 		}
 	}
@@ -129,13 +130,13 @@ func appendTeamNames(teamName string, values *string) {
 }
 
 func appendPlayers(team *domain.Team) {
-	teamName := strings.ToLower(team.Name)
 	allPlayers := append(team.Form, team.SubstitutePlayers...)
 	for _, player := range allPlayers {
 		playerName := strings.ToLower(player.Name)
 		scoring := &Scoring{
-			Team:  teamName,
-			Score: player.Score,
+			Player: player.Name,
+			Team:   team.Name,
+			Score:  player.Score,
 		}
 		stats.Players[playerName] = scoring
 	}
@@ -178,4 +179,10 @@ func matchRule(rule *configuration.Rule, comment string) bool {
 
 func Scorings() *Stats {
 	return stats
+}
+
+func matchTeamOrPlayer(entity string, scoring *Scoring) bool {
+	team := strings.ToLower(scoring.Team)
+	player := strings.ToLower(scoring.Player)
+	return strings.Contains(player, entity) || strings.Contains(team, entity)
 }

@@ -25,7 +25,9 @@ func (s Scrapper) ElementsByPattern(selector string, pattern string) rod.Element
 }
 
 func (s Scrapper) Click(selector string) {
-	s.Page.MustElement(selector).MustElement("*").MustClick()
+	if s.exists(selector) {
+		s.Page.MustElement(selector).MustElement("*").MustClick()
+	}
 }
 
 func (s Scrapper) Text(selector string) string {
@@ -34,4 +36,9 @@ func (s Scrapper) Text(selector string) string {
 
 func (s Scrapper) Elements(selector string) rod.Elements {
 	return s.Page.MustElements(selector)
+}
+
+func (s Scrapper) exists(selector string) bool {
+	elements, err := s.Page.Elements(selector)
+	return len(elements) > 0 || err != nil
 }

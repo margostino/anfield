@@ -20,7 +20,7 @@ func showStats(userId int64) (interface{}, string) {
 	players := scorer.Scorings().Players
 	for key, value := range players {
 		if isFollowing(key, userId) {
-			reply += fmt.Sprintf("Player %s, Score: %.2f\n", key, value.Score)
+			reply += fmt.Sprintf("Player %s, Score: %.2f\n", value.Player, value.Score)
 		}
 	}
 

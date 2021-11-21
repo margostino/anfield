@@ -32,7 +32,7 @@ func getLineups(url string) (*domain.Team, *domain.Team) {
 	substituteSelector := configuration.Lineups().SubstituteSelector
 
 	page := webScrapper.GoPage(lineupsUrl)
-	homeTeamName := page.Text(homeTeamSelector)
+	homeTeamName := page.Text(homeTeamSelector+"dsfd")
 	awayTeamName := page.Text(awayTeamSelector)
 	rawHomeFormation := page.Text(homeFormSelector)
 	rawAwayFormation := page.Text(awayFormSelector)

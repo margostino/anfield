@@ -11,9 +11,23 @@ import (
 // TODO: consumer does not need be a goroutine if it implements a infinite loop, unless we want extra process after that.
 // This aggregation in consumer should happen once by URL/Event
 func consume(url string) {
-	metadata := <-metadataBuffer[url]
-	event := NewEvent(metadata)
-	commentaryLoop(event)
+	var  event *domain.Event
+
+	select {
+	case metadata := <-metadataBuffer[url]:
+		event = NewEvent(metadata)
+	case <-time.After(5000 * time.Millisecond):
+		metadata := &domain.Metadata{
+			Url:      url,
+			H2H:      "",
+			Date:     "",
+			HomeTeam: nil,
+			AwayTeam: nil,
+		}
+		event = NewEvent(metadata)
+	}
+
+	enrich(event)
 	save(event)
 	done(url)
 }
@@ -25,7 +39,7 @@ func NewEvent(metadata *domain.Metadata) *domain.Event {
 	}
 }
 
-func commentaryLoop(event *domain.Event) {
+func enrich(event *domain.Event) {
 	url := event.Metadata.Url
 	h2h := event.Metadata.H2H
 	for {
