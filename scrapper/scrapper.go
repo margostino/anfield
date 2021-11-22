@@ -16,7 +16,8 @@ func New() *Scrapper {
 }
 
 func (s Scrapper) GoPage(url string) *Scrapper {
-	s.Page = s.Browser.MustPage(url)
+	// TODO: only wait once
+	s.Page = s.Browser.MustPage(url).MustWaitLoad()
 	return &s
 }
 
@@ -38,6 +39,7 @@ func (s Scrapper) Elements(selector string) rod.Elements {
 	return s.Page.MustElements(selector)
 }
 
+// TODO: improve the way to check existence
 func (s Scrapper) exists(selector string) bool {
 	elements, err := s.Page.Elements(selector)
 	return len(elements) > 0 || err != nil
