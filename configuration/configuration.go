@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"time"
 )
 
 var configFile = "./configuration.yml"
@@ -43,6 +44,10 @@ func Bot() *BotConfig {
 
 func Kafka() *KafkaConfig {
 	return config.Kafka
+}
+
+func ChannelTimeout() time.Duration {
+	return config.ChannelTimeout
 }
 
 func Realtime() *RealtimeConfig {

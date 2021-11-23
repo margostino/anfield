@@ -68,18 +68,19 @@ type LineupsConfig struct {
 }
 
 type Configuration struct {
-	AppPath    string            `yaml:"appPath"`
-	Data       *DataConfig       `yaml:"data"`
-	Source     *SourceConfig     `yaml:"source"`
-	Results    *ResultsConfig    `yaml:"results"`
-	Fixtures   *FixturesConfig   `yaml:"fixtures"`
-	Commentary *CommentaryConfig `yaml:"commentary"`
-	Info       *InfoConfig       `yaml:"info"`
-	Lineups    *LineupsConfig    `yaml:"lineups"`
-	Bot        *BotConfig        `yaml:"bot"`
-	Realtime   *RealtimeConfig   `yaml:"realtime"`
-	Kafka      *KafkaConfig      `yaml:"kafka"`
-	Rules      []Rule
+	AppPath        string            `yaml:"appPath"`
+	Data           *DataConfig       `yaml:"data"`
+	ChannelTimeout time.Duration     `yaml:"channelTimeout"`
+	Source         *SourceConfig     `yaml:"source"`
+	Results        *ResultsConfig    `yaml:"results"`
+	Fixtures       *FixturesConfig   `yaml:"fixtures"`
+	Commentary     *CommentaryConfig `yaml:"commentary"`
+	Info           *InfoConfig       `yaml:"info"`
+	Lineups        *LineupsConfig    `yaml:"lineups"`
+	Bot            *BotConfig        `yaml:"bot"`
+	Realtime       *RealtimeConfig   `yaml:"realtime"`
+	Kafka          *KafkaConfig      `yaml:"kafka"`
+	Rules          []Rule
 }
 
 type Rule struct {

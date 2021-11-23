@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"github.com/margostino/anfield/configuration"
 	"github.com/margostino/anfield/domain"
 	"github.com/margostino/anfield/io"
 	"github.com/margostino/anfield/kafka"
@@ -13,11 +14,12 @@ import (
 func consume(url string) {
 	var event *domain.Event
 	var metadata *domain.Metadata
+	timeout := configuration.ChannelTimeout()
 
 	select {
 	case metadata = <-metadataBuffer[url]:
 		event = NewEvent(metadata)
-	case <-time.After(10000 * time.Millisecond):
+	case <-time.After(timeout * time.Millisecond):
 		metadata = &domain.Metadata{
 			Url:      url,
 			H2H:      "",
