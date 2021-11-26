@@ -60,14 +60,14 @@ func GetUrlsResult(mode string) []string {
 	var urls []string
 	var url, selector, pattern string
 
+	selector = configuration.Scrapper().MatchRowsSelector
+	pattern = configuration.Scrapper().HrefPattern
+	url = configuration.Scrapper().Url
+
 	if mode == REALTIME {
-		selector = configuration.Fixture().Selector
-		pattern = configuration.Fixture().Pattern
-		url = configuration.Source().Url + configuration.Fixture().Url
+		url += configuration.Scrapper().FixturePath
 	} else {
-		selector = configuration.Results().Selector
-		pattern = configuration.Results().Pattern
-		url = configuration.Source().Url + configuration.Results().Url
+		url += configuration.Scrapper().ResultsPath
 	}
 
 	elements := webScrapper.GoPage(url).ElementsByPattern(selector, pattern)

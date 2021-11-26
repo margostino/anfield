@@ -11,8 +11,8 @@ import (
 )
 
 func getEventDate(url string) string {
-	infoUrl := url + configuration.Info().Params
-	selector := configuration.Info().Selector
+	infoUrl := url + configuration.Scrapper().InfoParams
+	selector := configuration.Scrapper().InfoSelector
 	startTimeDetail := webScrapper.GoPage(infoUrl).Text(selector)
 	startTime := strings.Split(startTimeDetail, "\n")[0]
 	day := strings.Split(startTime, " ")[0]
@@ -24,12 +24,12 @@ func getEventDate(url string) string {
 }
 
 func getLineups(url string) (*domain.Team, *domain.Team) {
-	lineupsUrl := url + configuration.Lineups().Params
-	homeTeamSelector := configuration.Lineups().HomeTeamSelector
-	awayTeamSelector := configuration.Lineups().AwayTeamSelector
-	homeFormSelector := configuration.Lineups().HomeSelector
-	awayFormSelector := configuration.Lineups().AwaySelector
-	substituteSelector := configuration.Lineups().SubstituteSelector
+	lineupsUrl := url + configuration.Scrapper().LineupsParams
+	homeTeamSelector := configuration.Scrapper().HomeTeamSelector
+	awayTeamSelector := configuration.Scrapper().AwayTeamSelector
+	homeFormSelector := configuration.Scrapper().HomeSelector
+	awayFormSelector := configuration.Scrapper().AwaySelector
+	substituteSelector := configuration.Scrapper().SubstituteSelector
 
 	page := webScrapper.GoPage(lineupsUrl)
 	homeTeamName := page.Text(homeTeamSelector)
@@ -142,7 +142,7 @@ func commentary(url string) {
 	eventName := strings.Split(url, "/")[7]
 	stopFlag := configuration.Realtime().StopFlag
 	graceEndTime := configuration.Realtime().GraceEndTime
-	commentaryUrl := url + configuration.Commentary().Params
+	commentaryUrl := url + configuration.Scrapper().CommentaryParams
 
 	fmt.Printf("======== START: %s ========\n", eventName)
 
@@ -180,8 +180,8 @@ func commentary(url string) {
 
 // GetEvents TODO: read events as unbounded streams or until conditions (e.g. 90' time, message pattern, etc)
 func getEvents(url string) *[]string {
-	moreCommentSelector := configuration.Commentary().MoreCommentsSelector
-	commentSelector := configuration.Commentary().Selector
+	moreCommentSelector := configuration.Scrapper().MoreCommentsSelector
+	commentSelector := configuration.Scrapper().CommentarySelector
 	page := webScrapper.GoPage(url)
 	page.Click(moreCommentSelector)
 	rawEvents := page.Text(commentSelector)

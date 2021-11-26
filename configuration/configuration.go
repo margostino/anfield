@@ -34,8 +34,8 @@ func unmarshal(file string, out interface{}) {
 	}
 }
 
-func Config() *Configuration {
-	return config
+func Scrapper() *ScrapperConfig {
+	return config.Scrapper
 }
 
 func Bot() *BotConfig {
@@ -47,7 +47,7 @@ func Kafka() *KafkaConfig {
 }
 
 func ChannelTimeout() time.Duration {
-	return config.ChannelTimeout
+	return config.App.ChannelTimeout
 }
 
 func Realtime() *RealtimeConfig {
@@ -58,42 +58,10 @@ func ScoringRules() []Rule {
 	return config.Rules
 }
 
-func Data() *DataConfig {
-	return config.Data
-}
-
-func Fixture() *FixturesConfig {
-	return config.Fixtures
-}
-
-func Results() *ResultsConfig {
-	return config.Results
-}
-
 func Source() *SourceConfig {
 	return config.Source
 }
 
-func Commentary() *CommentaryConfig {
-	return config.Commentary
-}
-
-func Lineups() *LineupsConfig {
-	return config.Lineups
-}
-
-func Info() *InfoConfig {
-	return config.Info
-}
-
 func AppPath() string {
-	return config.AppPath
-}
-
-func NewDynamicRule(pattern string, pos int) *Rule {
-	return &Rule{
-		Pattern: pattern,
-		Type:    DYNAMIC_RULE,
-		Pos:     pos,
-	}
+	return config.App.Path
 }

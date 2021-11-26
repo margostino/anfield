@@ -22,7 +22,7 @@ func (s Scrapper) GoPage(url string) *Scrapper {
 }
 
 func (s Scrapper) ElementsByPattern(selector string, pattern string) rod.Elements {
-	return s.Page.MustElement(selector).MustElements(pattern)
+	return s.Page.MustElements(pattern)
 }
 
 func (s Scrapper) Click(selector string) {

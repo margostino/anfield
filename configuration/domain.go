@@ -7,25 +7,38 @@ const (
 	STATIC_RULE  = "static"
 )
 
-type ResultsConfig struct {
-	Url      string `yaml:"url"`
-	Selector string `yaml:"selector"`
-	Pattern  string `yaml:"pattern"`
+type Configuration struct {
+	App      *AppConfig      `yaml:"app"`
+	Source   *SourceConfig   `yaml:"source"`
+	Scrapper *ScrapperConfig `yaml:"scrapper"`
+	Bot      *BotConfig      `yaml:"bot"`
+	Realtime *RealtimeConfig `yaml:"realtime"`
+	Kafka    *KafkaConfig    `yaml:"kafka"`
+	Rules    []Rule
 }
 
-type FixturesConfig struct {
-	Url      string `yaml:"url"`
-	Selector string `yaml:"selector"`
-	Pattern  string `yaml:"pattern"`
-}
-
-type DataConfig struct {
-	Update      bool   `yaml:"update"`
-	MatchesPath string `yaml:"matchesPath"`
+type ScrapperConfig struct {
+	Url                  string `yaml:"url"`
+	ResultsPath          string `yaml:"resultsPath"`
+	FixturePath          string `yaml:"fixturePath"`
+	MatchRowsSelector    string `yaml:"matchRowsSelector"`
+	HrefPattern          string `yaml:"hrefPattern"`
+	MoreCommentsSelector string `yaml:"moreCommentsSelector"`
+	CommentarySelector   string `yaml:"commentarySelector"`
+	CommentaryParams     string `yaml:"commentaryParams"`
+	InfoSelector         string `yaml:"infoSelector"`
+	InfoParams           string `yaml:"infoParams"`
+	HomeSelector         string `yaml:"homeSelector"`
+	HomeTeamSelector     string `yaml:"homeTeamSelector"`
+	AwaySelector         string `yaml:"awaySelector"`
+	AwayTeamSelector     string `yaml:"awayTeamSelector"`
+	SubstituteSelector   string `yaml:"substituteSelector"`
+	LineupsParams        string `yaml:"lineupsParams"`
 }
 
 type SourceConfig struct {
-	Url string `yaml:"url"`
+	Update      bool   `yaml:"update"`
+	MatchesPath string `yaml:"matchesPath"`
 }
 
 type KafkaConfig struct {
@@ -47,40 +60,9 @@ type RealtimeConfig struct {
 	CountDown    int           `yaml:"countDown"`
 }
 
-type CommentaryConfig struct {
-	MoreCommentsSelector string `yaml:"moreCommentsSelector"`
-	Selector             string `yaml:"selector"`
-	Params               string `yaml:"params"`
-}
-
-type InfoConfig struct {
-	Selector string `yaml:"selector"`
-	Params   string `yaml:"params"`
-}
-
-type LineupsConfig struct {
-	HomeSelector       string `yaml:"homeSelector"`
-	HomeTeamSelector   string `yaml:"homeTeamSelector"`
-	AwaySelector       string `yaml:"awaySelector"`
-	AwayTeamSelector   string `yaml:"awayTeamSelector"`
-	SubstituteSelector string `yaml:"substituteSelector"`
-	Params             string `yaml:"params"`
-}
-
-type Configuration struct {
-	AppPath        string            `yaml:"appPath"`
-	Data           *DataConfig       `yaml:"data"`
-	ChannelTimeout time.Duration     `yaml:"channelTimeout"`
-	Source         *SourceConfig     `yaml:"source"`
-	Results        *ResultsConfig    `yaml:"results"`
-	Fixtures       *FixturesConfig   `yaml:"fixtures"`
-	Commentary     *CommentaryConfig `yaml:"commentary"`
-	Info           *InfoConfig       `yaml:"info"`
-	Lineups        *LineupsConfig    `yaml:"lineups"`
-	Bot            *BotConfig        `yaml:"bot"`
-	Realtime       *RealtimeConfig   `yaml:"realtime"`
-	Kafka          *KafkaConfig      `yaml:"kafka"`
-	Rules          []Rule
+type AppConfig struct {
+	Path           string        `yaml:"path"`
+	ChannelTimeout time.Duration `yaml:"channelTimeout"`
 }
 
 type Rule struct {

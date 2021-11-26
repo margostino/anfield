@@ -9,8 +9,8 @@ import (
 var file *os.File
 
 func Initialize() {
-	if configuration.Data().Update {
-		filename := configuration.AppPath() + configuration.Data().MatchesPath
+	if configuration.Source().Update {
+		filename := configuration.AppPath() + configuration.Source().MatchesPath
 		f, err := os.OpenFile(filename, os.O_TRUNC|os.O_RDWR|os.O_CREATE, 0644)
 		common.Check(err)
 		file = f

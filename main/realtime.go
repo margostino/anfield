@@ -5,6 +5,7 @@ import (
 	"github.com/margostino/anfield/io"
 	"github.com/margostino/anfield/kafka"
 	"github.com/margostino/anfield/processor"
+	"log"
 )
 
 func main() {
@@ -23,7 +24,7 @@ func main() {
 	matches := configuration.Realtime().Matches
 
 	if matches != nil {
-		baseUrl := configuration.Source().Url
+		baseUrl := configuration.Scrapper().Url
 		for _, url := range matches {
 			urls = append(urls, baseUrl+url)
 		}
@@ -31,6 +32,11 @@ func main() {
 		urls = processor.GetInProgressResults()
 	}
 
-	processor.Process(urls)
+	if len(urls) > 0 {
+		processor.Process(urls)
+	} else {
+		log.Println("URLs Not Found!")
+	}
+
 	kafka.Close()
 }
