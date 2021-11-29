@@ -11,6 +11,7 @@ import (
 func main() {
 	bot.Initialize()
 	scorer.Initialize()
+	kafka.Initialize()
 	processor.Initialize()
 	updates := bot.Listen()
 	poll(updates)

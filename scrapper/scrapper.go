@@ -2,6 +2,7 @@ package scrapper
 
 import (
 	"github.com/go-rod/rod"
+	"github.com/go-rod/rod/lib/input"
 )
 
 type Scrapper struct {
@@ -22,7 +23,15 @@ func (s Scrapper) GoPage(url string) *Scrapper {
 }
 
 func (s Scrapper) ElementsByPattern(selector string, pattern string) rod.Elements {
-	return s.Page.MustElements(pattern)
+	return s.Page.MustElement(selector).MustWaitLoad().MustElements(pattern)
+}
+
+func (s Scrapper) DynamicElementsByPattern(selector string, pattern string) rod.Elements {
+	return s.Page.MustElement(selector).
+			MustWaitLoad().
+			MustPress(input.ArrowDown).
+			MustWaitLoad().
+			MustElements(pattern)
 }
 
 func (s Scrapper) Click(selector string) {

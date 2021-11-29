@@ -2,10 +2,10 @@ package processor
 
 import (
 	"fmt"
+	"github.com/go-rod/rod"
 	"github.com/margostino/anfield/common"
 	"github.com/margostino/anfield/configuration"
 	"github.com/margostino/anfield/domain"
-	"github.com/margostino/anfield/kafka"
 	"github.com/margostino/anfield/scrapper"
 	"strings"
 	"sync"
@@ -17,7 +17,6 @@ var metadataBuffer map[string]chan *domain.Metadata
 var commentaryBuffer map[string]chan *domain.Commentary
 
 func Initialize() {
-	kafka.Initialize()
 	webScrapper = scrapper.New()
 	waitGroups = make(map[string]*sync.WaitGroup, 0)
 	commentaryBuffer = make(map[string]chan *domain.Commentary)
@@ -58,11 +57,10 @@ func GetInProgressResults() []string {
 
 func GetUrlsResult(mode string) []string {
 	var urls []string
-	var url, selector, pattern string
-
-	selector = configuration.Scrapper().MatchRowsSelector
-	pattern = configuration.Scrapper().HrefPattern
-	url = configuration.Scrapper().Url
+	selector := configuration.Scrapper().MatchRowsSelector
+	pattern := configuration.Scrapper().HrefPattern
+	property := configuration.Scrapper().UrlProperty
+	url := configuration.Scrapper().Url
 
 	if mode == REALTIME {
 		url += configuration.Scrapper().FixturePath
@@ -70,12 +68,37 @@ func GetUrlsResult(mode string) []string {
 		url += configuration.Scrapper().ResultsPath
 	}
 
-	elements := webScrapper.GoPage(url).ElementsByPattern(selector, pattern)
+	var prevSize = 0
+	var tolerance = 35
+	var currentSize = -1
+	var equalsCounter = 0
+	var elements rod.Elements
 
-	for _, element := range elements {
-		status := element.MustText()
-		if mode == BATCH || (mode == REALTIME && inProgress(status)) {
-			urls = append(urls, element.MustProperty("href").String())
+	webScrapper = webScrapper.GoPage(url)
+
+	for {
+		elements = webScrapper.DynamicElementsByPattern(selector, pattern)
+
+		for _, element := range elements {
+			status := element.MustText()
+			if mode == BATCH || (mode == REALTIME && inProgress(status)) {
+				url := element.MustProperty(property).String()
+				if !common.InSlice(url, urls) {
+					urls = append(urls, url)
+				}
+			}
+		}
+
+		prevSize, currentSize = currentSize, len(urls)
+
+		if prevSize == currentSize {
+			equalsCounter += 1
+		} else {
+			equalsCounter = 0
+		}
+
+		if equalsCounter == tolerance {
+			break
 		}
 	}
 

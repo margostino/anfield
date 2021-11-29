@@ -10,6 +10,7 @@ import (
 
 func main() {
 	io.Initialize()
+	kafka.Initialize()
 	processor.Initialize()
 	webScrapper := processor.WebScrapper()
 	file := io.File()

@@ -34,6 +34,7 @@ type ScrapperConfig struct {
 	AwayTeamSelector     string `yaml:"awayTeamSelector"`
 	SubstituteSelector   string `yaml:"substituteSelector"`
 	LineupsParams        string `yaml:"lineupsParams"`
+	UrlProperty          string `yaml:"urlProperty"`
 }
 
 type SourceConfig struct {
