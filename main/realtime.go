@@ -9,11 +9,11 @@ import (
 )
 
 func main() {
-	io.Initialize()
-	kafka.Initialize()
+	kafka.NewWriter()
 	processor.Initialize()
 	webScrapper := processor.WebScrapper()
 	file := io.File()
+	urls := make([]string, 0)
 
 	if file != nil {
 		defer file.Close()
@@ -21,7 +21,6 @@ func main() {
 
 	defer webScrapper.Browser.MustClose()
 
-	urls := make([]string, 0)
 	matches := configuration.Realtime().Matches
 
 	if matches != nil {

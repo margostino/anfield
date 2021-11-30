@@ -8,13 +8,15 @@ const (
 )
 
 type Configuration struct {
-	App      *AppConfig      `yaml:"app"`
-	Source   *SourceConfig   `yaml:"source"`
-	Scrapper *ScrapperConfig `yaml:"scrapper"`
-	Bot      *BotConfig      `yaml:"bot"`
-	Realtime *RealtimeConfig `yaml:"realtime"`
-	Kafka    *KafkaConfig    `yaml:"kafka"`
-	Rules    []Rule
+	App        *AppConfig        `yaml:"app"`
+	Source     *SourceConfig     `yaml:"source"`
+	Scrapper   *ScrapperConfig   `yaml:"scrapper"`
+	Bot        *BotConfig        `yaml:"bot"`
+	DataLoader *DataLoaderConfig `yaml:"dataLoader"`
+	Realtime   *RealtimeConfig   `yaml:"realtime"`
+	Kafka      *KafkaConfig      `yaml:"kafka"`
+	Mongo      *MongoConfig      `yaml:"mongo"`
+	Rules      []Rule
 }
 
 type ScrapperConfig struct {
@@ -49,9 +51,20 @@ type KafkaConfig struct {
 	ConsumerGroupId string `yaml:"consumerGroupId"`
 }
 
+type MongoConfig struct {
+	Hostname          string `yaml:"hostname"`
+	Port              int    `yaml:"port"`
+	Database          string `yaml:"database"`
+	MatchesCollection string `yaml:"matchesCollection"`
+}
 type BotConfig struct {
-	Token   string  `yaml:"token"`
-	ChatIds []int64 `yaml:"chatIds"`
+	Token                string  `yaml:"token"`
+	ChatIds              []int64 `yaml:"chatIds"`
+	KafkaConsumerGroupId string  `yaml:"kafkaConsumerGroupId"`
+}
+
+type DataLoaderConfig struct {
+	KafkaConsumerGroupId string `yaml:"kafkaConsumerGroupId"`
 }
 
 type RealtimeConfig struct {

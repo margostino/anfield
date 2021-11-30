@@ -10,29 +10,34 @@ var kafkaConnection *kafka.Conn
 var kafkaReader *kafka.Reader
 var kafkaWriter *kafka.Writer
 
-func Initialize() {
-	kafkaWriter = NewKafkaWriter()
-	kafkaReader = NewKafkaReader()
-}
+//func Initialize() {
+//	kafkaWriter = NewKafkaWriter()
+//	kafkaReader = NewKafkaReader()
+//}
 
 func Close() {
+	if kafkaReader != nil {
+		closeReader()
+	}
+
+	if kafkaWriter != nil {
+		closeWriter()
+	}
+}
+
+func closeReader() {
 	if err := kafkaReader.Close(); err != nil {
 		log.Fatal("failed to close kafka reader:", err)
 	}
+}
+
+func closeWriter() {
 	if err := kafkaWriter.Close(); err != nil {
 		log.Fatal("failed to close kafka writer:", err)
 	}
 }
 
-func KafkaWriter() *kafka.Writer {
-	return kafkaWriter
-}
-
-func KafkaReader() *kafka.Reader {
-	return kafkaReader
-}
-
-func NewKafkaWriter() *kafka.Writer {
+func NewWriter() {
 	topic := configuration.Kafka().Topic
 	address := configuration.Kafka().Address
 
@@ -45,13 +50,13 @@ func NewKafkaWriter() *kafka.Writer {
 
 	//conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 
-	return writer
+	kafkaWriter = writer
 }
 
-func NewKafkaReader() *kafka.Reader {
+func NewReader(consumerGroupId string) {
 	topic := configuration.Kafka().Topic
 	address := configuration.Kafka().Address
-	consumerGroupId := configuration.Kafka().ConsumerGroupId
+	//consumerGroupId := configuration.Kafka().ConsumerGroupId
 
 	reader := kafka.NewReader(kafka.ReaderConfig{
 		Brokers: []string{address},
@@ -62,7 +67,5 @@ func NewKafkaReader() *kafka.Reader {
 	})
 
 	//conn.SetReadDeadline(time.Now().Add(10 * time.Second))
-
-	return reader
+	kafkaReader = reader
 }
-

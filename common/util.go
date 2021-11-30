@@ -3,6 +3,7 @@ package common
 import (
 	"fmt"
 	"hash/fnv"
+	"log"
 	"reflect"
 	"regexp"
 	"sync"
@@ -21,6 +22,7 @@ func WaitGroup(delta int) *sync.WaitGroup {
 
 func Check(e error) {
 	if e != nil {
+		log.Fatal(e)
 		panic(e)
 	}
 }

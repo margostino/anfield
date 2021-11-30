@@ -46,7 +46,7 @@ func Reply(update *tgbotapi.Update) (string, interface{}) {
 	return reply, markup
 }
 
-func Consume(updates tgbotapi.UpdatesChannel) {
+func Process(updates tgbotapi.UpdatesChannel) {
 	for update := range updates {
 		if update.Message == nil { // ignore any non-Message Updates
 			continue

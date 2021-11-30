@@ -42,6 +42,18 @@ func Bot() *BotConfig {
 	return config.Bot
 }
 
+func BotConsumerGroupId() string {
+	return config.Bot.KafkaConsumerGroupId
+}
+
+func DataLoaderConsumerGroupId() string {
+	return config.DataLoader.KafkaConsumerGroupId
+}
+
+func Mongo() *MongoConfig {
+	return config.Mongo
+}
+
 func Kafka() *KafkaConfig {
 	return config.Kafka
 }

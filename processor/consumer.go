@@ -3,7 +3,6 @@ package processor
 import (
 	"github.com/margostino/anfield/configuration"
 	"github.com/margostino/anfield/domain"
-	"github.com/margostino/anfield/io"
 	"github.com/margostino/anfield/kafka"
 	"time"
 )
@@ -31,7 +30,6 @@ func consume(url string) {
 
 	event = NewEvent(metadata)
 	enrich(event)
-	save(event)
 	done(url)
 }
 
@@ -59,11 +57,6 @@ func enrich(event *domain.Event) {
 		}
 
 	}
-}
-
-func save(event *domain.Event) {
-	eventLines := toString(event)
-	io.WriteOnFileIfUpdate(eventLines)
 }
 
 func done(url string) {

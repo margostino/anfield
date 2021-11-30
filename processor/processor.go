@@ -1,7 +1,6 @@
 package processor
 
 import (
-	"fmt"
 	"github.com/go-rod/rod"
 	"github.com/margostino/anfield/common"
 	"github.com/margostino/anfield/configuration"
@@ -108,13 +107,4 @@ func GetUrlsResult(mode string) []string {
 func inProgress(status string) bool {
 	prefix := strings.Split(status, "\n")[0]
 	return common.IsTimeCounter(prefix)
-}
-
-func toString(event *domain.Event) []string {
-	lines := make([]string, 0)
-	for _, commentary := range event.Data {
-		line := fmt.Sprintf("%s;%s;%s\n", event.Metadata.Date, commentary.Time, commentary.Comment)
-		lines = append(lines, line)
-	}
-	return lines
 }
