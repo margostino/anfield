@@ -29,13 +29,13 @@ func WebScrapper() *scrapper.Scrapper {
 func Process(urls []string) {
 	wg := common.WaitGroup(len(urls))
 	for _, url := range urls {
+		waitGroups[url] = common.WaitGroup(3)
 		go async(url, wg)
 	}
 	wg.Wait()
 }
 
 func async(url string, waitGroup *sync.WaitGroup) {
-	waitGroups[url] = common.WaitGroup(3)
 	commentaryBuffer[url] = make(chan *domain.Commentary)
 	metadataBuffer[url] = make(chan *domain.Metadata)
 
