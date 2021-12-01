@@ -62,8 +62,12 @@ func ChannelTimeout() time.Duration {
 	return config.App.ChannelTimeout
 }
 
-func Realtime() *RealtimeConfig {
-	return config.Realtime
+func Events() *EventsConfig {
+	return config.Events
+}
+
+func HasPredefinedEvents() bool {
+	return Events().Matches != nil
 }
 
 func ScoringRules() []Rule {

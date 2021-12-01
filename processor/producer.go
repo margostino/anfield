@@ -140,8 +140,8 @@ func commentary(url string) {
 	endOfEvent := false
 	matchInProgress := true
 	eventName := strings.Split(url, "/")[7]
-	stopFlag := configuration.Realtime().StopFlag
-	graceEndTime := configuration.Realtime().GraceEndTime
+	stopFlag := configuration.Events().StopFlag
+	graceEndTime := configuration.Events().GraceEndTime
 	commentaryUrl := url + configuration.Scrapper().CommentaryParams
 
 	fmt.Printf("======== START: %s ========\n", eventName)
@@ -150,7 +150,7 @@ func commentary(url string) {
 		if endOfEvent && countDown == 0 {
 			time.Sleep(graceEndTime * time.Millisecond)
 			countDown += 1
-		} else if endOfEvent && countDown == configuration.Realtime().CountDown {
+		} else if endOfEvent && countDown == configuration.Events().CountDown {
 			matchInProgress = false
 			break
 		}

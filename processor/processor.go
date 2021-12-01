@@ -6,6 +6,7 @@ import (
 	"github.com/margostino/anfield/configuration"
 	"github.com/margostino/anfield/domain"
 	"github.com/margostino/anfield/scrapper"
+	"log"
 	"strings"
 	"sync"
 )
@@ -14,6 +15,7 @@ var webScrapper *scrapper.Scrapper
 
 //var waitGroups map[string]*sync.WaitGroup
 var waitGroups = sync.Map{}
+var stats = sync.Map{}
 var metadataBuffer map[string]chan *domain.Metadata
 var commentaryBuffer map[string]chan *domain.Commentary
 
@@ -28,16 +30,35 @@ func WebScrapper() *scrapper.Scrapper {
 	return webScrapper
 }
 
-func Process(urls []string) {
-	wg := common.WaitGroup(len(urls))
-	for _, url := range urls {
-		waitGroups.Store(url, common.WaitGroup(3))
-		//waitGroups[url] = common.WaitGroup(3)
-		commentaryBuffer[url] = make(chan *domain.Commentary)
-		metadataBuffer[url] = make(chan *domain.Metadata)
-		go async(url, wg)
+func GetUrlsResult(mode string) []string {
+	var urls []string
+
+	if configuration.HasPredefinedEvents() {
+		urls = getUrlsByConfig()
+	} else {
+		urls = getUrlsByScrapper(mode)
 	}
-	wg.Wait()
+
+	return urls
+}
+
+func Process(urls []string) {
+	eventsToProcess := len(urls)
+
+	if eventsToProcess == 0 {
+		log.Println("URLs Not Found!")
+	} else {
+		wg := common.WaitGroup(len(urls))
+		log.Println("Events to process", eventsToProcess)
+		for _, url := range urls {
+			waitGroups.Store(url, common.WaitGroup(3))
+			//waitGroups[url] = common.WaitGroup(3)
+			commentaryBuffer[url] = make(chan *domain.Commentary)
+			metadataBuffer[url] = make(chan *domain.Metadata)
+			go async(url, wg)
+		}
+		wg.Wait()
+	}
 }
 
 func async(url string, waitGroup *sync.WaitGroup) {
@@ -57,12 +78,22 @@ func GetInProgressResults() []string {
 	return GetUrlsResult(REALTIME)
 }
 
-func GetUrlsResult(mode string) []string {
+func getUrlsByConfig() []string {
 	var urls []string
-	selector := configuration.Scrapper().MatchRowsSelector
-	pattern := configuration.Scrapper().HrefPattern
-	property := configuration.Scrapper().UrlProperty
+	matches := configuration.Events().Matches
+	baseUrl := configuration.Scrapper().Url
+	for _, url := range matches {
+		urls = append(urls, baseUrl+url)
+	}
+	return urls
+}
+
+func getUrlsByScrapper(mode string) []string {
+	var urls []string
 	url := configuration.Scrapper().Url
+	selector := configuration.Scrapper().MatchRowsSelector
+	property := configuration.Scrapper().UrlProperty
+	pattern := configuration.Scrapper().HrefPattern
 
 	if mode == REALTIME {
 		url += configuration.Scrapper().FixturePath

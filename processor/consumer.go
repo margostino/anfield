@@ -1,9 +1,13 @@
 package processor
 
 import (
+	"fmt"
 	"github.com/margostino/anfield/configuration"
 	"github.com/margostino/anfield/domain"
 	"github.com/margostino/anfield/kafka"
+	"log"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -20,6 +24,7 @@ func consume(url string) {
 	case metadata = <-metadataBuffer[url]:
 		event = NewEvent(metadata)
 	case <-time.After(timeout * time.Millisecond):
+		log.Println("No metadata for", url)
 		metadata = &domain.Metadata{
 			Url:      url,
 			H2H:      "",
@@ -43,7 +48,7 @@ func NewEvent(metadata *domain.Metadata) *domain.Event {
 
 func enrich(event *domain.Event) {
 	url := event.Metadata.Url
-	h2h := event.Metadata.H2H
+	//h2h := event.Metadata.H2H
 	for {
 		commentary := <-commentaryBuffer[url]
 		event.Data = append(event.Data, commentary)
@@ -53,10 +58,38 @@ func enrich(event *domain.Event) {
 		if end(commentary) {
 			break
 		} else {
-			printCommentary(h2h, commentary)
+			//printCommentary(h2h, commentary)
+			loggingState(url, commentary)
 			kafka.Produce(event.Metadata, commentary)
 		}
 
+	}
+}
+
+func loggingState(url string, commentary *domain.Commentary) {
+	var time, additionalTime, totalTime int
+	var completion float64
+
+	if isTimedComment(commentary) {
+		rawTime := strings.ReplaceAll(commentary.Time, "'", "")
+		fullTime := strings.Split(rawTime, "+")
+		time, _ = strconv.Atoi(fullTime[0])
+
+		if len(fullTime) > 1 {
+			additionalTime, _ = strconv.Atoi(fullTime[1])
+			totalTime = time
+		} else {
+			totalTime = time + additionalTime
+		}
+
+		if totalTime > 90 {
+			completion = 100
+		} else {
+			completion = float64(totalTime) * 100 / 90
+		}
+
+		message := fmt.Sprintf("[%s] > %.2f", url, completion)
+		log.Println(message)
 	}
 }
 

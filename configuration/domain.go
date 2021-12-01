@@ -13,7 +13,7 @@ type Configuration struct {
 	Scrapper   *ScrapperConfig   `yaml:"scrapper"`
 	Bot        *BotConfig        `yaml:"bot"`
 	DataLoader *DataLoaderConfig `yaml:"dataLoader"`
-	Realtime   *RealtimeConfig   `yaml:"realtime"`
+	Events     *EventsConfig     `yaml:"events"`
 	Kafka      *KafkaConfig      `yaml:"kafka"`
 	Mongo      *MongoConfig      `yaml:"mongo"`
 	Rules      []Rule
@@ -67,7 +67,7 @@ type DataLoaderConfig struct {
 	KafkaConsumerGroupId string `yaml:"kafkaConsumerGroupId"`
 }
 
-type RealtimeConfig struct {
+type EventsConfig struct {
 	Matches      []string      `yaml:"matches"`
 	StopFlag     string        `yaml:"stopFlag"`
 	GraceEndTime time.Duration `yaml:"graceEndTime"`
