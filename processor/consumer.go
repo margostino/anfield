@@ -88,7 +88,7 @@ func loggingState(url string, commentary *domain.Commentary) {
 			completion = float64(totalTime) * 100 / 90
 		}
 
-		message := fmt.Sprintf("[%s] > %.2f", url, completion)
+		message := fmt.Sprintf("[%s] > %.2f%", url, completion)
 		log.Println(message)
 	}
 }
