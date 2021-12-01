@@ -11,13 +11,15 @@ import (
 )
 
 var webScrapper *scrapper.Scrapper
-var waitGroups map[string]*sync.WaitGroup
+
+//var waitGroups map[string]*sync.WaitGroup
+var waitGroups = sync.Map{}
 var metadataBuffer map[string]chan *domain.Metadata
 var commentaryBuffer map[string]chan *domain.Commentary
 
 func Initialize() {
 	webScrapper = scrapper.New()
-	waitGroups = make(map[string]*sync.WaitGroup, 0)
+	//waitGroups = make(map[string]*sync.WaitGroup, 0)
 	commentaryBuffer = make(map[string]chan *domain.Commentary)
 	metadataBuffer = make(map[string]chan *domain.Metadata)
 }
@@ -29,20 +31,21 @@ func WebScrapper() *scrapper.Scrapper {
 func Process(urls []string) {
 	wg := common.WaitGroup(len(urls))
 	for _, url := range urls {
-		waitGroups[url] = common.WaitGroup(3)
+		waitGroups.Store(url, common.WaitGroup(3))
+		//waitGroups[url] = common.WaitGroup(3)
+		commentaryBuffer[url] = make(chan *domain.Commentary)
+		metadataBuffer[url] = make(chan *domain.Metadata)
 		go async(url, wg)
 	}
 	wg.Wait()
 }
 
 func async(url string, waitGroup *sync.WaitGroup) {
-	commentaryBuffer[url] = make(chan *domain.Commentary)
-	metadataBuffer[url] = make(chan *domain.Metadata)
-
 	go produce(url)
 	go consume(url)
-
-	waitGroups[url].Wait()
+	//waitGroups[url].Wait()
+	wg, _ := waitGroups.Load(url)
+	wg.(*sync.WaitGroup).Wait()
 	waitGroup.Done()
 }
 

@@ -6,6 +6,7 @@ import (
 	mongo "github.com/margostino/anfield/mongodb"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"log"
 )
 
 func Consume() {
@@ -24,6 +25,7 @@ func Consume() {
 		}
 		result := mongo.FindOneAndUpdate(filter, update, &opt)
 		common.Check(result.Err())
+		log.Println("Message consumed and stored", message.Metadata.H2H)
 	}
 }
 

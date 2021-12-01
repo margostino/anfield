@@ -130,7 +130,7 @@ func produce(url string) {
 func metadata(url string) {
 	metadata := getMetadata(url)
 	metadataBuffer[url] <- metadata
-	waitGroups[url].Done()
+	done(url)
 }
 
 // TODO: implement proper stop in loop but scan all partial events
@@ -175,7 +175,7 @@ func commentary(url string) {
 	}
 
 	close(commentaryBuffer[url])
-	waitGroups[url].Done()
+	done(url)
 }
 
 // GetEvents TODO: read events as unbounded streams or until conditions (e.g. 90' time, message pattern, etc)

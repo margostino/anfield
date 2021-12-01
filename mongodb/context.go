@@ -9,7 +9,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"log"
-	"time"
 )
 
 var mongoConnection *mongo.Client
@@ -29,7 +28,8 @@ func Initialize() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	ctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
+	//ctx, _ = context.WithTimeout(context.Background(), 10 * time.Second)
+	ctx = context.TODO()
 	err = mongoConnection.Connect(ctx)
 	common.Check(err)
 	err = mongoConnection.Ping(ctx, readpref.Primary())

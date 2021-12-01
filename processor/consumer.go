@@ -4,6 +4,7 @@ import (
 	"github.com/margostino/anfield/configuration"
 	"github.com/margostino/anfield/domain"
 	"github.com/margostino/anfield/kafka"
+	"sync"
 	"time"
 )
 
@@ -60,5 +61,7 @@ func enrich(event *domain.Event) {
 }
 
 func done(url string) {
-	waitGroups[url].Done()
+	//waitGroups[url].Done()
+	wg, _ := waitGroups.Load(url)
+	wg.(*sync.WaitGroup).Done()
 }

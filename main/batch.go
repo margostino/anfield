@@ -5,6 +5,7 @@ import (
 	"github.com/margostino/anfield/kafka"
 	"github.com/margostino/anfield/mongodb"
 	"github.com/margostino/anfield/processor"
+	"log"
 )
 
 func main() {
@@ -14,8 +15,8 @@ func main() {
 	processor.Initialize()
 	webScrapper := processor.WebScrapper()
 	defer webScrapper.Browser.MustClose()
-
 	matches := configuration.Realtime().Matches
+
 	if matches != nil {
 		baseUrl := configuration.Scrapper().Url
 		for _, url := range matches {
@@ -25,8 +26,14 @@ func main() {
 		urls = processor.GetFinishedResults()
 	}
 
+	if len(urls) > 0 {
+		processor.Process(urls)
+	} else {
+		log.Println("URLs Not Found!")
+	}
 
-	processor.Process(urls)
+	//urls = processor.GetFinishedResults()
+	//processor.Process(urls)
 	kafka.Close()
 	mongo.Close()
 }
