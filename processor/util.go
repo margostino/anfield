@@ -14,7 +14,11 @@ func printCommentary(h2h string, commentary *domain.Commentary) {
 }
 
 func end(commentary *domain.Commentary) bool {
-	return commentary == nil || (commentary.Time == "end" && commentary.Comment == "end")
+	return commentary == nil || (commentary.Time == "end")
+}
+
+func notStarted(commentary *domain.Commentary) bool {
+	return commentary.Time == "not-started"
 }
 
 func isTimedComment(commentary *domain.Commentary) bool {

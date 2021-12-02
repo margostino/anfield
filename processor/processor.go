@@ -96,7 +96,7 @@ func getUrlsByScrapper(mode string) []string {
 	pattern := configuration.Scrapper().HrefPattern
 
 	if mode == REALTIME {
-		url += configuration.Scrapper().FixturePath
+		url += configuration.Scrapper().FixturesPath
 	} else {
 		url += configuration.Scrapper().ResultsPath
 	}
@@ -114,7 +114,7 @@ func getUrlsByScrapper(mode string) []string {
 
 		for _, element := range elements {
 			status := element.MustText()
-			if mode == BATCH || (mode == REALTIME && inProgress(status)) {
+			if true || mode == BATCH || (mode == REALTIME && inProgress(status)) {
 				url := element.MustProperty(property).String()
 				if !common.InSlice(url, urls) {
 					urls = append(urls, url)

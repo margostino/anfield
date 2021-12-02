@@ -41,7 +41,10 @@ func (s Scrapper) Click(selector string) {
 }
 
 func (s Scrapper) Text(selector string) string {
-	return s.Page.MustElement(selector).MustText()
+	if s.exists(selector) {
+		return s.Page.MustElement(selector).MustText()
+	}
+	return ""
 }
 
 func (s Scrapper) Elements(selector string) rod.Elements {

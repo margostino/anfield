@@ -57,12 +57,13 @@ func enrich(event *domain.Event) {
 
 		if end(commentary) {
 			break
+		} else if notStarted(commentary) {
+			kafka.Produce(event.Metadata, nil)
 		} else {
 			//printCommentary(h2h, commentary)
 			loggingState(url, commentary)
 			kafka.Produce(event.Metadata, commentary)
 		}
-
 	}
 }
 

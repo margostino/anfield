@@ -27,7 +27,7 @@ type LoggerConfig struct {
 type ScrapperConfig struct {
 	Url                  string `yaml:"url"`
 	ResultsPath          string `yaml:"resultsPath"`
-	FixturePath          string `yaml:"fixturePath"`
+	FixturesPath         string `yaml:"fixturesPath"`
 	MatchRowsSelector    string `yaml:"matchRowsSelector"`
 	HrefPattern          string `yaml:"hrefPattern"`
 	MoreCommentsSelector string `yaml:"moreCommentsSelector"`

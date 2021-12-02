@@ -153,30 +153,39 @@ func commentary(url string) {
 			countDown += 1
 		} else if endOfEvent && countDown == configuration.Events().CountDown {
 			matchInProgress = false
+			commentaryBuffer[url] <- NewFlagCommentary("end")
 			break
 		}
 		rawEvents := getEvents(commentaryUrl)
-		commentaries := normalize(*rawEvents)
-		if sent != len(commentaries) {
-			for _, commentary := range commentaries {
-				commentaryBuffer[url] <- commentary
-				sent += 1
-				if strings.Contains(commentary.Comment, stopFlag) {
-					endOfEvent = true
+		if rawEvents != nil {
+			commentaries := normalize(*rawEvents)
+			if sent != len(commentaries) {
+				for _, commentary := range commentaries {
+					commentaryBuffer[url] <- commentary
+					sent += 1
+					if strings.Contains(commentary.Comment, stopFlag) {
+						endOfEvent = true
+					}
 				}
 			}
+		} else {
+			log.Println("Match is not started")
+			commentaryBuffer[url] <- NewFlagCommentary("not-started")
+			break
 		}
 	}
 
 	log.Println("END event processing:", eventName)
 
-	commentaryBuffer[url] <- &domain.Commentary{
-		Time:    "end",
-		Comment: "end",
-	}
-
 	close(commentaryBuffer[url])
 	done(url)
+}
+
+func NewFlagCommentary(flag string) *domain.Commentary {
+	return &domain.Commentary{
+		Time:    flag,
+		Comment: flag,
+	}
 }
 
 // GetEvents TODO: read events as unbounded streams or until conditions (e.g. 90' time, message pattern, etc)
@@ -186,8 +195,12 @@ func getEvents(url string) *[]string {
 	page := webScrapper.GoPage(url)
 	page.Click(moreCommentSelector)
 	rawEvents := page.Text(commentSelector)
-	events := strings.Split(rawEvents, "\n")
-	return &events
+	if rawEvents != "" {
+		events := strings.Split(rawEvents, "\n")
+		return &events
+	}
+
+	return nil
 }
 
 func normalize(comments []string) []*domain.Commentary {
