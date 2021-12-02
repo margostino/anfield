@@ -6,6 +6,7 @@ import (
 	"github.com/margostino/anfield/common"
 	"github.com/margostino/anfield/configuration"
 	"github.com/margostino/anfield/domain"
+	"log"
 	"strings"
 	"time"
 )
@@ -144,7 +145,7 @@ func commentary(url string) {
 	graceEndTime := configuration.Events().GraceEndTime
 	commentaryUrl := url + configuration.Scrapper().CommentaryParams
 
-	fmt.Printf("======== START: %s ========\n", eventName)
+	log.Println("START event processing:", eventName)
 
 	for ok := true; ok; ok = matchInProgress {
 		if endOfEvent && countDown == 0 {
@@ -167,7 +168,7 @@ func commentary(url string) {
 		}
 	}
 
-	fmt.Printf("======== END: %s ========\n", eventName)
+	log.Println("END event processing:", eventName)
 
 	commentaryBuffer[url] <- &domain.Commentary{
 		Time:    "end",

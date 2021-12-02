@@ -12,11 +12,16 @@ type Configuration struct {
 	Source     *SourceConfig     `yaml:"source"`
 	Scrapper   *ScrapperConfig   `yaml:"scrapper"`
 	Bot        *BotConfig        `yaml:"bot"`
+	Logger     *LoggerConfig     `yaml:"logger"`
 	DataLoader *DataLoaderConfig `yaml:"dataLoader"`
 	Events     *EventsConfig     `yaml:"events"`
 	Kafka      *KafkaConfig      `yaml:"kafka"`
 	Mongo      *MongoConfig      `yaml:"mongo"`
 	Rules      []Rule
+}
+
+type LoggerConfig struct {
+	CompletionStep int `yaml:"completionStep"`
 }
 
 type ScrapperConfig struct {

@@ -67,8 +67,11 @@ func enrich(event *domain.Event) {
 }
 
 func loggingState(url string, commentary *domain.Commentary) {
+	step := configuration.Logger().CompletionStep
 	var time, additionalTime, totalTime int
-	var completion float64
+	var completionFloat float64
+
+	event := strings.Split(url, "/")[7]
 
 	if isTimedComment(commentary) {
 		rawTime := strings.ReplaceAll(commentary.Time, "'", "")
@@ -83,13 +86,18 @@ func loggingState(url string, commentary *domain.Commentary) {
 		}
 
 		if totalTime > 90 {
-			completion = 100
+			completionFloat = 100
 		} else {
-			completion = float64(totalTime) * 100 / 90
+			completionFloat = float64(totalTime) * 100 / 90
 		}
 
-		message := fmt.Sprintf("[%s] > %.2f%", url, completion)
-		log.Println(message)
+		completion := int(completionFloat)
+
+		if completion == 1 || completion%step == 0 {
+			message := fmt.Sprintf("[%s] ==> %d%%", event, completion)
+			log.Println(message)
+		}
+
 	}
 }
 

@@ -66,6 +66,10 @@ func Events() *EventsConfig {
 	return config.Events
 }
 
+func Logger() *LoggerConfig {
+	return config.Logger
+}
+
 func HasPredefinedEvents() bool {
 	return Events().Matches != nil
 }
