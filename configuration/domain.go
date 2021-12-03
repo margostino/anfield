@@ -61,6 +61,7 @@ type MongoConfig struct {
 	Port              int    `yaml:"port"`
 	Database          string `yaml:"database"`
 	MatchesCollection string `yaml:"matchesCollection"`
+	ScoresCollection  string `yaml:"scoresCollection"`
 }
 type BotConfig struct {
 	Token                string  `yaml:"token"`

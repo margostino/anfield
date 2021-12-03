@@ -5,12 +5,10 @@ import (
 	"github.com/margostino/anfield/bot"
 	"github.com/margostino/anfield/configuration"
 	"github.com/margostino/anfield/kafka"
-	"github.com/margostino/anfield/scorer"
 )
 
 func main() {
 	bot.Initialize()
-	scorer.Initialize()
 	kafka.NewReader(configuration.BotConsumerGroupId())
 	updates := bot.Listen()
 	poll(updates)

@@ -29,8 +29,6 @@ func consume(url string) {
 			Url:      url,
 			H2H:      "",
 			Date:     "",
-			HomeTeam: nil,
-			AwayTeam: nil,
 		}
 	}
 
@@ -103,7 +101,6 @@ func loggingState(url string, commentary *domain.Commentary) {
 }
 
 func done(url string) {
-	//waitGroups[url].Done()
 	wg, _ := waitGroups.Load(url)
 	wg.(*sync.WaitGroup).Done()
 }

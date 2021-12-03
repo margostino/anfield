@@ -112,25 +112,33 @@ func newPlayer(name string) *domain.Player {
 
 func getMetadata(url string) *domain.Metadata {
 	eventDate := getEventDate(url)
-	homeTeam, awayTeam := getLineups(url)
-	h2h := fmt.Sprintf("%s vs %s", homeTeam.Name, awayTeam.Name)
+	//h2h := fmt.Sprintf("%s vs %s", homeTeam.Name, awayTeam.Name)
 	return &domain.Metadata{
 		Url:      url,
-		H2H:      h2h,
+		//H2H:      h2h, TODO: generate ID
 		Date:     eventDate,
-		HomeTeam: homeTeam,
-		AwayTeam: awayTeam,
 	}
 }
 
 func produce(url string) {
 	go metadata(url)
+	go lineups(url)
 	go commentary(url)
 }
 
 func metadata(url string) {
 	metadata := getMetadata(url)
 	metadataBuffer[url] <- metadata
+	done(url)
+}
+
+func lineups(url string) {
+	homeTeam, awayTeam := getLineups(url)
+	lineups := &domain.Lineups{
+		HomeTeam: homeTeam,
+		AwayTeam: awayTeam,
+	}
+	lineupsBuffer[url] <- lineups
 	done(url)
 }
 

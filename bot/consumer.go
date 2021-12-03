@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/margostino/anfield/domain"
 	"github.com/margostino/anfield/kafka"
-	"github.com/margostino/anfield/scorer"
 )
 
 func Consume() {
@@ -16,7 +15,6 @@ func Consume() {
 		}
 
 		commentary := concat(message)
-		scorer.CalculateScoring(message.Metadata.HomeTeam, message.Metadata.AwayTeam, message.Data)
 		Send(commentary)
 	}
 }

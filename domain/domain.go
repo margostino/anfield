@@ -15,6 +15,9 @@ type Metadata struct {
 	Url      string
 	H2H      string
 	Date     string
+}
+
+type Lineups struct {
 	HomeTeam *Team
 	AwayTeam *Team
 }
