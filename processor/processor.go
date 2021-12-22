@@ -15,6 +15,7 @@ var webScrapper *scrapper.Scrapper
 
 //var waitGroups map[string]*sync.WaitGroup
 var waitGroups = sync.Map{}
+var waitGroup *sync.WaitGroup
 var stats = sync.Map{}
 var metadataBuffer map[string]chan *domain.Metadata
 var lineupsBuffer map[string]chan *domain.Lineups
@@ -25,13 +26,14 @@ func Initialize() {
 	//waitGroups = make(map[string]*sync.WaitGroup, 0)
 	commentaryBuffer = make(map[string]chan *domain.Commentary)
 	metadataBuffer = make(map[string]chan *domain.Metadata)
+	lineupsBuffer = make(map[string]chan *domain.Lineups)
 }
 
 func WebScrapper() *scrapper.Scrapper {
 	return webScrapper
 }
 
-func Close()  {
+func Close() {
 	webScrapper.Browser.MustClose()
 }
 
@@ -53,16 +55,15 @@ func Process(urls []string) {
 	if eventsToProcess == 0 {
 		log.Println("URLs Not Found!")
 	} else {
-		wg := common.WaitGroup(len(urls))
+		waitGroup = common.WaitGroup(len(urls) * (1 + 1 + 1 + 1))
 		log.Println("Events to process: ", eventsToProcess)
 		for _, url := range urls {
 			initializeChannels(url)
 			produce(url)
 			go consume(url)
-			wait(url)
-			wg.Done()
+			//wait(url)
 		}
-		wg.Wait()
+		waitGroup.Wait()
 	}
 }
 
@@ -75,6 +76,7 @@ func initializeChannels(url string) {
 	waitGroups.Store(url, common.WaitGroup(4))
 	commentaryBuffer[url] = make(chan *domain.Commentary)
 	metadataBuffer[url] = make(chan *domain.Metadata)
+	lineupsBuffer[url] = make(chan *domain.Lineups)
 }
 
 func GetFinishedResults() []string {

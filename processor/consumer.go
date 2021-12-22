@@ -8,7 +8,6 @@ import (
 	"log"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -92,6 +91,7 @@ func loggingState(url string, commentary *domain.Commentary) {
 
 		completion := int(completionFloat)
 
+		// TODO: reduce logging lines (e.g. once per partial)
 		if completion == 1 || completion%step == 0 {
 			message := fmt.Sprintf("[%s] ==> %d%%", event, completion)
 			log.Println(message)
@@ -101,6 +101,7 @@ func loggingState(url string, commentary *domain.Commentary) {
 }
 
 func done(url string) {
-	wg, _ := waitGroups.Load(url)
-	wg.(*sync.WaitGroup).Done()
+	//wg, _ := waitGroups.Load(url)
+	//wg.(*sync.WaitGroup).Done()
+	waitGroup.Done()
 }
