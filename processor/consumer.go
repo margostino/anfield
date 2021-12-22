@@ -58,7 +58,8 @@ func enrich(event *domain.Event) {
 			kafka.Produce(event.Metadata, nil)
 		} else {
 			//printCommentary(h2h, commentary)
-			loggingState(url, commentary)
+			logging(url, commentary)
+			//loggingState(url, commentary)
 			kafka.Produce(event.Metadata, commentary)
 		}
 	}

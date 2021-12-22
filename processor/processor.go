@@ -27,6 +27,7 @@ func Initialize() {
 	commentaryBuffer = make(map[string]chan *domain.Commentary)
 	metadataBuffer = make(map[string]chan *domain.Metadata)
 	lineupsBuffer = make(map[string]chan *domain.Lineups)
+	InitializeLogger()
 }
 
 func WebScrapper() *scrapper.Scrapper {
