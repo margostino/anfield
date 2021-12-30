@@ -7,12 +7,14 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"sync"
 )
 
-var state map[string] int
+//var state map[string] int
+var state = sync.Map{}
 
 func InitializeLogger()  {
-	state = make(map[string]int)
+	//state = make(map[string]int, 0)
 }
 
 func logging(url string, commentary *domain.Commentary) {
@@ -42,9 +44,9 @@ func logging(url string, commentary *domain.Commentary) {
 
 		completion := int(completionFloat)
 
-		value, _ := state[event]
-		if (completion == 1 || completion%step == 0) && value < completion {
-			state[event] = completion
+		value, _ := state.Load(event)
+		if (completion == 1 || completion%step == 0) && (value == nil || value.(int) < completion) {
+			state.Store(event, completion)
 			message := fmt.Sprintf("[%s] ==> %d%%", event, completion)
 			log.Println(message)
 		}
