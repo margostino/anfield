@@ -17,18 +17,30 @@ import (
 func consume(url string) {
 	var event *domain.Event
 	var metadata *domain.Metadata
+	var consumedLineups *domain.Lineups
+	var consumedDate string
+
 	timeout := configuration.ChannelTimeout()
 
 	select {
-	case metadata = <-metadataBuffer[url]:
-		event = NewEvent(metadata)
+	case consumedDate = <-matchDateBuffer[url]:
 	case <-time.After(timeout * time.Millisecond):
 		log.Println("No metadata for", url)
-		metadata = &domain.Metadata{
-			Url:      url,
-			H2H:      "",
-			Date:     "",
-		}
+		consumedDate = ""
+	}
+
+	select {
+	case consumedLineups = <-lineupsBuffer[url]:
+	case <-time.After(timeout * time.Millisecond):
+		log.Println("No lineups for", url)
+		consumedLineups = nil
+	}
+
+	metadata = &domain.Metadata{
+		Url:     url,
+		H2H:     "", // TODO: generate ID //h2h := fmt.Sprintf("%s vs %s", homeTeam.Name, awayTeam.Name)
+		Lineups: consumedLineups,
+		Date:    consumedDate,
 	}
 
 	event = NewEvent(metadata)

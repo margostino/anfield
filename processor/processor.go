@@ -17,7 +17,7 @@ var webScrapper *scrapper.Scrapper
 var waitGroups = sync.Map{}
 var waitGroup *sync.WaitGroup
 var stats = sync.Map{}
-var metadataBuffer map[string]chan *domain.Metadata
+var matchDateBuffer map[string]chan string
 var lineupsBuffer map[string]chan *domain.Lineups
 var commentaryBuffer map[string]chan *domain.Commentary
 
@@ -25,13 +25,9 @@ func Initialize() {
 	webScrapper = scrapper.New()
 	//waitGroups = make(map[string]*sync.WaitGroup, 0)
 	commentaryBuffer = make(map[string]chan *domain.Commentary)
-	metadataBuffer = make(map[string]chan *domain.Metadata)
+	matchDateBuffer = make(map[string]chan string)
 	lineupsBuffer = make(map[string]chan *domain.Lineups)
 	InitializeLogger()
-}
-
-func WebScrapper() *scrapper.Scrapper {
-	return webScrapper
 }
 
 func Close() {
@@ -76,7 +72,7 @@ func wait(url string) {
 func initializeChannels(url string) {
 	waitGroups.Store(url, common.WaitGroup(4))
 	commentaryBuffer[url] = make(chan *domain.Commentary)
-	metadataBuffer[url] = make(chan *domain.Metadata)
+	matchDateBuffer[url] = make(chan string)
 	lineupsBuffer[url] = make(chan *domain.Lineups)
 }
 
