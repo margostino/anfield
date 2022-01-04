@@ -34,13 +34,13 @@ func Close() {
 	webScrapper.Browser.MustClose()
 }
 
-func GetUrlsResult(mode string) []string {
+func GetUrlsResult() []string {
 	var urls []string
 
 	if configuration.HasPredefinedEvents() {
 		urls = getUrlsByConfig()
 	} else {
-		urls = getUrlsByScrapper(mode)
+		urls = getUrlsByScrapper()
 	}
 
 	return urls
@@ -76,14 +76,6 @@ func initializeChannels(url string) {
 	lineupsBuffer[url] = make(chan *domain.Lineups)
 }
 
-func GetFinishedResults() []string {
-	return GetUrlsResult(BATCH)
-}
-
-func GetInProgressResults() []string {
-	return GetUrlsResult(REALTIME)
-}
-
 func getUrlsByConfig() []string {
 	var urls []string
 	matches := configuration.Events().Matches
@@ -94,18 +86,22 @@ func getUrlsByConfig() []string {
 	return urls
 }
 
-func getUrlsByScrapper(mode string) []string {
+func getUrlsByScrapper() []string {
+	baseUrl := configuration.Scrapper().Url
+	fixturesUrl := baseUrl + configuration.Scrapper().FixturesPath // Matches in progress
+	resultsUrl := baseUrl + configuration.Scrapper().ResultsPath   // Matches finished
+
+	fixtureUrls := getMatchUrlsFrom(fixturesUrl)
+	resultUrls := getMatchUrlsFrom(resultsUrl)
+
+	return append(fixtureUrls, resultUrls...)
+}
+
+func getMatchUrlsFrom(url string) []string {
 	var urls []string
-	url := configuration.Scrapper().Url
 	selector := configuration.Scrapper().MatchRowsSelector
 	property := configuration.Scrapper().UrlProperty
 	pattern := configuration.Scrapper().HrefPattern
-
-	if mode == REALTIME {
-		url += configuration.Scrapper().FixturesPath
-	} else {
-		url += configuration.Scrapper().ResultsPath
-	}
 
 	var prevSize = 0
 	var tolerance = 35
@@ -119,12 +115,10 @@ func getUrlsByScrapper(mode string) []string {
 		elements = webScrapper.DynamicElementsByPattern(selector, pattern)
 
 		for _, element := range elements {
-			status := element.MustText()
-			if true || mode == BATCH || (mode == REALTIME && inProgress(status)) {
-				url := element.MustProperty(property).String()
-				if !common.InSlice(url, urls) {
-					urls = append(urls, url)
-				}
+			//status := element.MustText() ---> inProgress(status) # For Realtime.
+			url := element.MustProperty(property).String()
+			if !common.InSlice(url, urls) {
+				urls = append(urls, url)
 			}
 		}
 

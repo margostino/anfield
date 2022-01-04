@@ -6,12 +6,11 @@ import (
 	"github.com/margostino/anfield/processor"
 )
 
-// TODO: unify with batch and apply strategy on results in progress
 func main() {
 	kafka.NewWriter()
 	mongo.Initialize()
 	processor.Initialize()
-	urls := processor.GetInProgressResults()
+	urls := processor.GetUrlsResult()
 	processor.Process(urls)
 	kafka.Close()
 	mongo.Close()
