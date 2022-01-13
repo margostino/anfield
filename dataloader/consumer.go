@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/margostino/anfield/domain"
 	"github.com/margostino/anfield/kafka"
-	mongo "github.com/margostino/anfield/mongodb"
+	mongo "github.com/margostino/anfield/db"
 	"go.mongodb.org/mongo-driver/bson"
 	mongo2 "go.mongodb.org/mongo-driver/mongo"
 	"log"

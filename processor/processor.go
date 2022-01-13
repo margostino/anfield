@@ -3,50 +3,52 @@ package processor
 import (
 	"github.com/go-rod/rod"
 	"github.com/margostino/anfield/common"
-	"github.com/margostino/anfield/configuration"
 	"github.com/margostino/anfield/domain"
-	"github.com/margostino/anfield/scrapper"
 	"log"
 	"strings"
 	"sync"
 )
 
-var webScrapper *scrapper.Scrapper
+//var webScrapper *scrapper.Scrapper
 
 //var waitGroups map[string]*sync.WaitGroup
-var waitGroups = sync.Map{}
+//var waitGroups = sync.Map{}
 var waitGroup *sync.WaitGroup
 var stats = sync.Map{}
-var matchDateBuffer map[string]chan string
-var lineupsBuffer map[string]chan *domain.Lineups
-var commentaryBuffer map[string]chan *domain.Commentary
+
+//var matchDateBuffer map[string]chan string
+//var lineupsBuffer map[string]chan *domain.Lineups
+//var commentaryBuffer map[string]chan *domain.Commentary
 
 func Initialize() {
-	webScrapper = scrapper.New()
+	//webScrapper = scrapper.New()
 	//waitGroups = make(map[string]*sync.WaitGroup, 0)
-	commentaryBuffer = make(map[string]chan *domain.Commentary)
-	matchDateBuffer = make(map[string]chan string)
-	lineupsBuffer = make(map[string]chan *domain.Lineups)
-	InitializeLogger()
+
+	//commentaryBuffer = make(map[string]chan *domain.Commentary)
+	//matchDateBuffer = make(map[string]chan string)
+	//lineupsBuffer = make(map[string]chan *domain.Lineups)
 }
 
-func Close() {
-	webScrapper.Browser.MustClose()
-}
-
-func GetUrlsResult() []string {
-	var urls []string
-
-	if configuration.HasPredefinedEvents() {
-		urls = getUrlsByConfig()
-	} else {
-		urls = getUrlsByScrapper()
+func NewChannels() *Channels {
+	return &Channels{
+		commentary: make(map[string]chan *domain.Commentary),
+		matchDate:  make(map[string]chan string),
+		lineups:    make(map[string]chan *domain.Lineups),
 	}
-
-	return urls
 }
 
-func Process(urls []string) {
+func NewWaitGroups() sync.Map {
+	return sync.Map{}
+}
+
+func (a App) InitializeChannels(url string) {
+	a.waitGroups.Store(url, common.WaitGroup(4))
+	a.channels.matchDate[url] = make(chan string)
+	a.channels.lineups[url] = make(chan *domain.Lineups)
+	a.channels.commentary[url] = make(chan *domain.Commentary)
+}
+
+func (a App) Process(urls []string) error {
 	eventsToProcess := len(urls)
 
 	if eventsToProcess == 0 {
@@ -55,61 +57,56 @@ func Process(urls []string) {
 		waitGroup = common.WaitGroup(len(urls) * (1 + 1 + 1 + 1))
 		log.Println("Events to process: ", eventsToProcess)
 		for _, url := range urls {
-			initializeChannels(url)
-			produce(url)
-			go consume(url)
+			a.InitializeChannels(url)
+			a.produce(url)
+			go a.consume(url)
 			//wait(url)
 		}
 		waitGroup.Wait()
 	}
+
+	return nil // TODO: to be defined
 }
 
-func wait(url string) {
-	wg, _ := waitGroups.Load(url)
+func (a App) wait(url string) {
+	wg, _ := a.waitGroups.Load(url)
 	wg.(*sync.WaitGroup).Wait()
 }
 
-func initializeChannels(url string) {
-	waitGroups.Store(url, common.WaitGroup(4))
-	commentaryBuffer[url] = make(chan *domain.Commentary)
-	matchDateBuffer[url] = make(chan string)
-	lineupsBuffer[url] = make(chan *domain.Lineups)
-}
-
-func getUrlsByConfig() []string {
+func (a App) getUrlsByConfig() []string {
+	matches := a.configuration.Events.Matches
+	baseUrl := a.configuration.Scrapper.Url
 	var urls []string
-	matches := configuration.Events().Matches
-	baseUrl := configuration.Scrapper().Url
 	for _, url := range matches {
 		urls = append(urls, baseUrl+url)
 	}
 	return urls
 }
 
-func getUrlsByScrapper() []string {
-	baseUrl := configuration.Scrapper().Url
-	fixturesUrl := baseUrl + configuration.Scrapper().FixturesPath // Matches in progress
-	resultsUrl := baseUrl + configuration.Scrapper().ResultsPath   // Matches finished
+func (a App) getUrlsByScrapper() []string {
+	baseUrl := a.configuration.Scrapper.Url
+	fixturesUrl := baseUrl + a.configuration.Scrapper.FixturesPath // Matches in progress
+	resultsUrl := baseUrl + a.configuration.Scrapper.ResultsPath   // Matches finished
 
-	fixtureUrls := getMatchUrlsFrom(fixturesUrl)
-	resultUrls := getMatchUrlsFrom(resultsUrl)
+	fixtureUrls := a.getMatchUrlsFrom(fixturesUrl)
+	resultUrls := a.getMatchUrlsFrom(resultsUrl)
 
 	return append(fixtureUrls, resultUrls...)
 }
 
-func getMatchUrlsFrom(url string) []string {
-	var urls []string
-	selector := configuration.Scrapper().MatchRowsSelector
-	property := configuration.Scrapper().UrlProperty
-	pattern := configuration.Scrapper().HrefPattern
+func (a App) getMatchUrlsFrom(url string) []string {
+	selector := a.configuration.Scrapper.MatchRowsSelector
+	property := a.configuration.Scrapper.UrlProperty
+	pattern := a.configuration.Scrapper.HrefPattern
 
+	var urls []string
 	var prevSize = 0
 	var tolerance = 35
 	var currentSize = -1
 	var equalsCounter = 0
 	var elements rod.Elements
 
-	webScrapper = webScrapper.GoPage(url)
+	webScrapper := a.scrapper.GoPage(url) // TODO: fix and reuse the scrapper in the struct instead of this
 
 	for {
 		elements = webScrapper.DynamicElementsByPattern(selector, pattern)

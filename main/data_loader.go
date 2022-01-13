@@ -4,7 +4,7 @@ import (
 	"github.com/margostino/anfield/configuration"
 	"github.com/margostino/anfield/dataloader"
 	"github.com/margostino/anfield/kafka"
-	mongo "github.com/margostino/anfield/mongodb"
+	mongo "github.com/margostino/anfield/db"
 )
 
 func main() {

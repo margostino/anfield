@@ -4,17 +4,16 @@ import (
 	"fmt"
 	"github.com/go-rod/rod"
 	"github.com/margostino/anfield/common"
-	"github.com/margostino/anfield/configuration"
 	"github.com/margostino/anfield/domain"
 	"log"
 	"strings"
 	"time"
 )
 
-func getEventDate(url string) string {
-	infoUrl := url + configuration.Scrapper().InfoParams
-	selector := configuration.Scrapper().InfoSelector
-	startTimeDetail := webScrapper.GoPage(infoUrl).Text(selector)
+func (a App) getEventDate(url string) string {
+	infoUrl := url + a.configuration.Scrapper.InfoParams
+	selector := a.configuration.Scrapper.InfoSelector
+	startTimeDetail := a.scrapper.GoPage(infoUrl).Text(selector)
 	startTime := strings.Split(startTimeDetail, "\n")[0]
 	day := strings.Split(startTime, " ")[0]
 	month := strings.Split(startTime, " ")[1]
@@ -24,15 +23,15 @@ func getEventDate(url string) string {
 	return eventDate.String()
 }
 
-func getLineups(url string) (*domain.Team, *domain.Team) {
-	lineupsUrl := url + configuration.Scrapper().LineupsParams
-	homeTeamSelector := configuration.Scrapper().HomeTeamSelector
-	awayTeamSelector := configuration.Scrapper().AwayTeamSelector
-	homeFormSelector := configuration.Scrapper().HomeSelector
-	awayFormSelector := configuration.Scrapper().AwaySelector
-	substituteSelector := configuration.Scrapper().SubstituteSelector
+func (a App) getLineups(url string) (*domain.Team, *domain.Team) {
+	lineupsUrl := url + a.configuration.Scrapper.LineupsParams
+	homeTeamSelector := a.configuration.Scrapper.HomeTeamSelector
+	awayTeamSelector := a.configuration.Scrapper.AwayTeamSelector
+	homeFormSelector := a.configuration.Scrapper.HomeSelector
+	awayFormSelector := a.configuration.Scrapper.AwaySelector
+	substituteSelector := a.configuration.Scrapper.SubstituteSelector
 
-	page := webScrapper.GoPage(lineupsUrl)
+	page := a.scrapper.GoPage(lineupsUrl)
 	homeTeamName := page.Text(homeTeamSelector)
 	awayTeamName := page.Text(awayTeamSelector)
 	rawHomeFormation := page.Text(homeFormSelector)
@@ -110,37 +109,37 @@ func newPlayer(name string) *domain.Player {
 	}
 }
 
-func produce(url string) {
-	go matchDate(url)
-	go lineups(url)
-	go commentary(url)
+func (a App) produce(url string) {
+	go a.matchDate(url)
+	go a.lineups(url)
+	go a.commentary(url)
 }
 
-func matchDate(url string) {
-	matchDateBuffer[url] <- getEventDate(url)
+func (a App) matchDate(url string) {
+	a.channels.matchDate[url] <- a.getEventDate(url)
 	done(url)
 }
 
-func lineups(url string) {
-	homeTeam, awayTeam := getLineups(url)
+func (a App) lineups(url string) {
+	homeTeam, awayTeam := a.getLineups(url)
 	lineups := &domain.Lineups{
 		HomeTeam: homeTeam,
 		AwayTeam: awayTeam,
 	}
-	lineupsBuffer[url] <- lineups
+	a.channels.lineups[url] <- lineups
 	done(url)
 }
 
 // TODO: implement proper stop in loop but scan all partial events
-func commentary(url string) {
+func (a App) commentary(url string) {
 	sent := 0
 	countDown := 0
 	endOfEvent := false
 	matchInProgress := true
 	eventName := strings.Split(url, "/")[7]
-	stopFlag := configuration.Events().StopFlag
-	graceEndTime := configuration.Events().GraceEndTime
-	commentaryUrl := url + configuration.Scrapper().CommentaryParams
+	stopFlag := a.configuration.Events.StopFlag
+	graceEndTime := a.configuration.Events.GraceEndTime
+	commentaryUrl := url + a.configuration.Scrapper.CommentaryParams
 
 	log.Println("START event processing:", eventName)
 
@@ -148,17 +147,17 @@ func commentary(url string) {
 		if endOfEvent && countDown == 0 {
 			time.Sleep(graceEndTime * time.Millisecond)
 			countDown += 1
-		} else if endOfEvent && countDown == configuration.Events().CountDown {
+		} else if endOfEvent && countDown == a.configuration.Events.CountDown {
 			matchInProgress = false
-			commentaryBuffer[url] <- NewFlagCommentary("end")
+			a.channels.commentary[url] <- NewFlagCommentary("end")
 			break
 		}
-		rawEvents := getEvents(commentaryUrl)
+		rawEvents := a.getEvents(commentaryUrl)
 		if rawEvents != nil {
 			commentaries := normalize(*rawEvents)
 			if sent != len(commentaries) {
 				for _, commentary := range commentaries {
-					commentaryBuffer[url] <- commentary
+					a.channels.commentary[url] <- commentary
 					sent += 1
 					if strings.Contains(commentary.Comment, stopFlag) {
 						endOfEvent = true
@@ -167,14 +166,14 @@ func commentary(url string) {
 			}
 		} else {
 			log.Println("Match is not started")
-			commentaryBuffer[url] <- NewFlagCommentary("not-started")
+			a.channels.commentary[url] <- NewFlagCommentary("not-started")
 			break
 		}
 	}
 
 	log.Println("END event processing:", eventName)
 
-	close(commentaryBuffer[url])
+	close(a.channels.commentary[url])
 	done(url)
 }
 
@@ -186,10 +185,10 @@ func NewFlagCommentary(flag string) *domain.Commentary {
 }
 
 // GetEvents TODO: read events as unbounded streams or until conditions (e.g. 90' time, message pattern, etc)
-func getEvents(url string) *[]string {
-	moreCommentSelector := configuration.Scrapper().MoreCommentsSelector
-	commentSelector := configuration.Scrapper().CommentarySelector
-	page := webScrapper.GoPage(url)
+func (a App) getEvents(url string) *[]string {
+	moreCommentSelector := a.configuration.Scrapper.MoreCommentsSelector
+	commentSelector := a.configuration.Scrapper.CommentarySelector
+	page := a.scrapper.GoPage(url)
 	page.Click(moreCommentSelector)
 	rawEvents := page.Text(commentSelector)
 	if rawEvents != "" {
