@@ -4,8 +4,8 @@ import (
 	"github.com/margostino/anfield/configuration"
 	"github.com/margostino/anfield/db"
 	"github.com/margostino/anfield/domain"
+	"github.com/margostino/anfield/kafka"
 	"github.com/margostino/anfield/scrapper"
-	"github.com/segmentio/kafka-go"
 	"sync"
 )
 
@@ -16,7 +16,7 @@ type Channels struct {
 }
 
 type App struct {
-	kafka         *kafka.Writer
+	kafka         *kafka.Producer
 	db            *db.Database
 	scrapper      *scrapper.Scrapper
 	configuration *configuration.Configuration

@@ -2,7 +2,6 @@ package processor
 
 import (
 	"github.com/margostino/anfield/domain"
-	"github.com/margostino/anfield/kafka"
 	"log"
 	"time"
 )
@@ -63,10 +62,10 @@ func (a App) enrich(event *domain.Event) {
 		if end(commentary) {
 			break
 		} else if notStarted(commentary) {
-			kafka.Produce(event.Metadata, nil)
+			a.kafka.Produce(event.Metadata, nil)
 		} else {
-			//logging(url, commentary)
-			kafka.Produce(event.Metadata, commentary)
+			a.logger.log(url, commentary)
+			a.kafka.Produce(event.Metadata, commentary)
 		}
 	}
 }

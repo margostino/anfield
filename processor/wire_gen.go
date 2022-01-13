@@ -16,15 +16,15 @@ import (
 
 func NewApp() (*App, error) {
 	configurationConfiguration := configuration.GetConfig()
-	kafkaParams := kafka.NewKafkaParams(configurationConfiguration)
-	writer := kafka.NewWriter(kafkaParams)
+	config := kafka.NewConfig(configurationConfiguration)
+	producer := kafka.NewProducer(config)
 	database := db.NewDBConnection()
 	scrapperScrapper := scrapper.New()
 	channels := NewChannels()
 	syncMap := NewWaitGroups()
 	logger := NewLogger(configurationConfiguration)
 	app := &App{
-		kafka:         writer,
+		kafka:         producer,
 		db:            database,
 		scrapper:      scrapperScrapper,
 		configuration: configurationConfiguration,

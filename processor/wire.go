@@ -12,8 +12,8 @@ import (
 
 func NewApp() (*App, error) {
 	wire.Build(
-		kafka.NewKafkaParams,
-		kafka.NewWriter,
+		kafka.NewConfig,
+		kafka.NewProducer,
 		db.NewDBConnection,
 		scrapper.New,
 		configuration.GetConfig,
