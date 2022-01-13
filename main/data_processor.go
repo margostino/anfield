@@ -10,12 +10,4 @@ func main() {
 	common.Check(err)
 	app.Start()
 	app.Close()
-	//kafka.NewWriter()
-	//mongo.Initialize()
-	//processor.Initialize()
-	//urls := processor.GetUrlsResult()
-	//processor.Process(urls)
-	//kafka.Close()
-	//mongo.Close()
-	//processor.Close()
 }

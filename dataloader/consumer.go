@@ -3,8 +3,6 @@ package dataloader
 import (
 	"fmt"
 	"github.com/margostino/anfield/domain"
-	"github.com/margostino/anfield/kafka"
-	mongo "github.com/margostino/anfield/db"
 	"go.mongodb.org/mongo-driver/bson"
 	mongo2 "go.mongodb.org/mongo-driver/mongo"
 	"log"
@@ -19,19 +17,20 @@ type Document struct {
 	Data     *Data
 }
 
-func Consume() {
+func (a App) Consume() error {
 	for {
-		message, err := kafka.ReadMessage()
+		message, err := a.kafka.ReadMessage()
 
 		if err != nil {
 			break
 		}
 
-		result := upsertCommentary(message)
+		result := a.upsertCommentary(message)
 		document := decode(result)
 		logging(document)
 		//upsertScoring(message)
 	}
+	return nil // TODO: tbd
 }
 
 func decode(result *mongo2.SingleResult) *Document {
@@ -54,10 +53,10 @@ func decode(result *mongo2.SingleResult) *Document {
 //
 //}
 
-func upsertCommentary(message *domain.Message) *mongo2.SingleResult {
+func (a App) upsertCommentary(message *domain.Message) *mongo2.SingleResult {
 	filter := getFilter(message)
 	update := getUpdateDoc(message)
-	result := mongo.Matches.Upsert(filter, update)
+	result := a.db.Matches.Upsert(filter, update)
 	return result
 }
 
