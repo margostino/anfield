@@ -1,10 +1,8 @@
 package scorer
 
 import (
-	"errors"
 	"github.com/margostino/anfield/configuration"
 	"github.com/margostino/anfield/domain"
-	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -146,12 +144,12 @@ func ruleLookup(comment string, rules []configuration.Rule) []configuration.Rule
 
 func getRules(comment string) ([]configuration.Rule, error) {
 	var rules = make([]configuration.Rule, 0)
-	rules = append(rules, ruleLookup(comment, configuration.ScoringRules())...)
-
-	if len(rules) == 0 {
-		log.Printf("MISSING RULE %s", comment)
-		return rules, errors.New("missing rule")
-	}
+	//rules = append(rules, ruleLookup(comment, configuration.ScoringRules())...)
+	//
+	//if len(rules) == 0 {
+	//	log.Printf("MISSING RULE %s", comment)
+	//	return rules, errors.New("missing rule")
+	//}
 
 	return rules, nil
 }
