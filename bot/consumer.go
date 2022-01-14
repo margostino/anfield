@@ -3,19 +3,18 @@ package bot
 import (
 	"fmt"
 	"github.com/margostino/anfield/domain"
-	"github.com/margostino/anfield/kafka"
 )
 
-func Consume() {
+func (a App) Consume() {
 	for {
-		message, err := kafka.ReadMessage()
+		message, err := a.kafka.ReadMessage()
 
 		if err != nil {
 			break
 		}
 
 		commentary := concat(message)
-		Send(commentary)
+		a.Send(commentary)
 	}
 }
 

@@ -2,13 +2,12 @@ package bot
 
 import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/margostino/anfield/configuration"
 	"log"
 )
 
 var previousMessage string
 
-func Reply(update *tgbotapi.Update) (string, interface{}) {
+func (a App) Reply(update *tgbotapi.Update) (string, interface{}) {
 	var markup interface{}
 	var reply string
 	message := update.Message.Text
@@ -34,7 +33,7 @@ func Reply(update *tgbotapi.Update) (string, interface{}) {
 	}
 
 	if shouldShowStats(message) {
-		markup, reply = showStats(userId)
+		markup, reply = a.showStats(userId)
 	}
 
 	if reply == "" {
@@ -46,13 +45,13 @@ func Reply(update *tgbotapi.Update) (string, interface{}) {
 	return reply, markup
 }
 
-func Process(updates tgbotapi.UpdatesChannel) {
+func (a App) Process(updates tgbotapi.UpdatesChannel) {
 	for update := range updates {
 		if update.Message == nil { // ignore any non-Message Updates
 			continue
 		}
 		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
-		replyMessage, replyMarkup := Reply(&update)
+		replyMessage, replyMarkup := a.Reply(&update)
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, replyMessage)
 		msg.ReplyMarkup = replyMarkup
 		//msg.ReplyToMessageID = update.Message.MessageID
@@ -60,9 +59,9 @@ func Process(updates tgbotapi.UpdatesChannel) {
 	}
 }
 
-func Send(message string) {
+func (a App) Send(message string) {
 	// TODO: use subscription instead of static IDs from config
-	for _, chatId := range configuration.Bot().ChatIds {
+	for _, chatId := range a.configuration.Bot.ChatIds {
 		if IsFollowing(message, chatId) {
 			msg := tgbotapi.NewMessage(chatId, message)
 			msg.ReplyMarkup = nil
