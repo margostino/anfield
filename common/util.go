@@ -6,6 +6,7 @@ import (
 	"log"
 	"reflect"
 	"regexp"
+	"strings"
 	"sync"
 	"time"
 )
@@ -121,4 +122,41 @@ func Remove(slice []string, element string) []string {
 	}
 
 	return slice
+}
+
+func GenerateEventID(url string) string {
+	home, away, identifier := ExtractTeamsFrom(url)
+	return fmt.Sprintf("%s-%s-%s", home, away, identifier)
+}
+
+func ExtractTeamsFrom(url string) (string, string, string) {
+	var home, away, identifier string
+	substringsPath := strings.Split(url, "/")
+
+	if len(substringsPath) > 8 {
+		identifier = substringsPath[8]
+	}
+
+	if len(substringsPath) > 7 {
+		h2h := strings.Split(substringsPath[7], "vs")
+
+		if len(h2h) > 1 {
+			home = strings.ReplaceAll(strings.Trim(h2h[0], "-"), "-", "_")
+			away = strings.ReplaceAll(strings.Trim(h2h[1], "-"), "-", "_")
+		}
+	}
+
+	if identifier == "" {
+		home = "invalid_identifier"
+	}
+
+	if home == "" {
+		home = "invalid_home"
+	}
+
+	if away == "" {
+		away = "invalid_away"
+	}
+
+	return home, away, identifier
 }

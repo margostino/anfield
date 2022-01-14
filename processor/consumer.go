@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"github.com/margostino/anfield/common"
 	"github.com/margostino/anfield/domain"
 	"log"
 	"time"
@@ -12,30 +13,30 @@ import (
 func (a App) consume(url string) {
 	var event *domain.Event
 	var metadata *domain.Metadata
-	var consumedLineups *domain.Lineups
-	var consumedDate string
+	var lineups *domain.Lineups
+	var date string
 
 	timeout := a.configuration.ChannelTimeout()
 
 	select {
-	case consumedDate = <-a.channels.matchDate[url]:
+	case date = <-a.channels.matchDate[url]:
 	case <-time.After(timeout * time.Millisecond):
 		log.Println("No metadata for", url)
-		consumedDate = ""
+		date = ""
 	}
 
 	select {
-	case consumedLineups = <-a.channels.lineups[url]:
+	case lineups = <-a.channels.lineups[url]:
 	case <-time.After(timeout * time.Millisecond):
 		log.Println("No lineups for", url)
-		consumedLineups = nil
+		lineups = nil
 	}
 
 	metadata = &domain.Metadata{
 		Url:     url,
-		H2H:     "", // TODO: generate ID //h2h := fmt.Sprintf("%s vs %s", homeTeam.Name, awayTeam.Name)
-		Lineups: consumedLineups,
-		Date:    consumedDate,
+		Id:      common.GenerateEventID(url),
+		Lineups: lineups,
+		Date:    date,
 	}
 
 	event = NewEvent(metadata)

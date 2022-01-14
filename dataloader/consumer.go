@@ -72,13 +72,8 @@ func getUpdateDoc(message *domain.Message) bson.M {
 }
 
 func logging(document *Document) {
-	var h2h string
-	if document.Metadata.H2H != "" {
-		h2h = document.Metadata.H2H
-	} else {
-		h2h = "N/A"
-	}
-
-	message := fmt.Sprintf("New Message from %s with length %d", h2h, len(document.Data.Comments))
+	id := document.Metadata.Id
+	dataLength := len(document.Data.Comments)
+	message := fmt.Sprintf("New Message from %s with data length %d", id, dataLength)
 	log.Println(message)
 }

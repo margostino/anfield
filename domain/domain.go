@@ -13,7 +13,7 @@ type Team struct {
 
 type Metadata struct {
 	Url     string
-	H2H     string
+	Id      string
 	Lineups *Lineups
 	Date    string
 }
