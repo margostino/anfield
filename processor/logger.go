@@ -10,15 +10,20 @@ import (
 	"sync"
 )
 
-//var state map[string] int
 var state = sync.Map{}
 
-func InitializeLogger()  {
-	//state = make(map[string]int, 0)
+type Logger struct {
+	configuration *configuration.Configuration
 }
 
-func logging(url string, commentary *domain.Commentary) {
-	step := configuration.Logger().CompletionStep
+func NewLogger(configuration *configuration.Configuration) *Logger {
+	return &Logger{
+		configuration: configuration,
+	}
+}
+
+func (l *Logger) log(url string, commentary *domain.Commentary) {
+	step := l.configuration.Logger.CompletionStep
 	var time, additionalTime, totalTime int
 	var completionFloat float64
 

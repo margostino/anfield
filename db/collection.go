@@ -1,6 +1,7 @@
-package mongo
+package db
 
 import (
+	"context"
 	"github.com/margostino/anfield/common"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -12,7 +13,7 @@ type DBCollection struct {
 
 func (c *DBCollection) Upsert(filter interface{}, document interface{}) *mongo.SingleResult {
 	options := upsertOptions()
-	result := c.Collection.FindOneAndUpdate(ctx, filter, document, options)
+	result := c.Collection.FindOneAndUpdate(context.TODO(), filter, document, options)
 	common.Check(result.Err())
 	return result
 }

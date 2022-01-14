@@ -1,8 +1,6 @@
 package bot
 
 import (
-	"fmt"
-	"github.com/margostino/anfield/scorer"
 	"strings"
 )
 
@@ -15,18 +13,18 @@ func shouldShowStats(message string) bool {
 	return message == "/stats"
 }
 
-func showStats(userId int64) (interface{}, string) {
+func (a App) showStats(userId int64) (interface{}, string) {
 	var reply string
-	players := scorer.Scorings().Players
-	for key, value := range players {
-		if isFollowing(key, userId) {
-			reply += fmt.Sprintf("Player %s, Score: %.2f\n", value.Player, value.Score)
-		}
-	}
-
-	if reply == "" {
-		reply = "No stats yet!"
-	}
+	//players := scorer.Scorings().Players
+	//for key, value := range players {
+	//	if isFollowing(key, userId) {
+	//		reply += fmt.Sprintf("Player %s, Score: %.2f\n", value.Player, value.Score)
+	//	}
+	//}
+	//
+	//if reply == "" {
+	//	reply = "No stats yet!"
+	//}
 
 	return nil, reply
 }

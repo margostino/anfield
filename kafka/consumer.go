@@ -5,41 +5,33 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/margostino/anfield/domain"
+	"github.com/segmentio/kafka-go"
+	"log"
 )
 
-//func Consume() {
-//	for {
-//		message, err := ReadMessage()
-//
-//		if err != nil {
-//			break
-//		}
-//
-//		commentary := concat(message)
-//		scorer.CalculateScoring(message.Metadata.HomeTeam, message.Metadata.AwayTeam, message.Data)
-//		bot.Send(commentary)
-//		mongo.Insert(message)
-//	}
-//}
+type Consumer struct {
+	Config *Config
+	Client *kafka.Reader
+}
 
-//func save(event *domain.Event) {
-//	//mongo.Insert().Ins
-//	eventLines := toString(event)
-//	io.WriteOnFileIfUpdate(eventLines)
-//}
+func NewConsumer(config *Config) *Consumer {
+	//conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+	client := kafka.NewReader(kafka.ReaderConfig{
+		Brokers: []string{config.address},
+		GroupID: config.consumerGroupId,
+		Topic:   config.topic,
+		//MinBytes: 10e3, // 10KB
+		//MaxBytes: 10e6, // 10MB
+	})
+	return &Consumer{
+		Config: config,
+		Client: client,
+	}
+}
 
-//func toString(event *domain.Event) []string {
-//	lines := make([]string, 0)
-//	for _, commentary := range event.Data {
-//		line := fmt.Sprintf("%s;%s;%s\n", event.Metadata.Date, commentary.Time, commentary.Comment)
-//		lines = append(lines, line)
-//	}
-//	return lines
-//}
-
-func ReadMessage() (*domain.Message, error) {
+func (r *Consumer) ReadMessage() (*domain.Message, error) {
 	var message domain.Message
-	m, err := kafkaReader.ReadMessage(context.Background())
+	m, err := r.Client.ReadMessage(context.Background())
 	if err != nil {
 		return nil, err
 	}
@@ -53,4 +45,10 @@ func ReadMessage() (*domain.Message, error) {
 	//fmt.Printf("Message at offset %d: %s\n", m.Offset, string(m.Key))
 
 	return &message, nil
+}
+
+func (r *Consumer) Close() {
+	if err := r.Client.Close(); err != nil {
+		log.Fatal("failed to close kafka reader bus:", err)
+	}
 }

@@ -8,15 +8,11 @@ import (
 	"time"
 )
 
-var configFile = "./configuration.yml"
-var rulesFile = "./rules.yml"
-var config = getConfig(configFile, rulesFile)
-
-func getConfig(configFile string, rulesFile string) *Configuration {
+func GetConfig() *Configuration {
 	var configuration Configuration
 	var rules Rules
-	unmarshal(configFile, &configuration)
-	unmarshal(rulesFile, &rules)
+	unmarshal("./configuration.yml", &configuration)
+	unmarshal("./rules.yml", &rules)
 	configuration.Rules = rules.ScoringRules
 	return &configuration
 }
@@ -34,54 +30,22 @@ func unmarshal(file string, out interface{}) {
 	}
 }
 
-func Scrapper() *ScrapperConfig {
-	return config.Scrapper
+func (c *Configuration) BotConsumerGroupId() string {
+	return c.Bot.KafkaConsumerGroupId
 }
 
-func Bot() *BotConfig {
-	return config.Bot
+func (c *Configuration) DataLoaderConsumerGroupId() string {
+	return c.DataLoader.KafkaConsumerGroupId
 }
 
-func BotConsumerGroupId() string {
-	return config.Bot.KafkaConsumerGroupId
+func (c *Configuration) ChannelTimeout() time.Duration {
+	return c.App.ChannelTimeout
 }
 
-func DataLoaderConsumerGroupId() string {
-	return config.DataLoader.KafkaConsumerGroupId
+func (c *Configuration) HasPredefinedEvents() bool {
+	return c.Events.Matches != nil
 }
 
-func Mongo() *MongoConfig {
-	return config.Mongo
-}
-
-func Kafka() *KafkaConfig {
-	return config.Kafka
-}
-
-func ChannelTimeout() time.Duration {
-	return config.App.ChannelTimeout
-}
-
-func Events() *EventsConfig {
-	return config.Events
-}
-
-func Logger() *LoggerConfig {
-	return config.Logger
-}
-
-func HasPredefinedEvents() bool {
-	return Events().Matches != nil
-}
-
-func ScoringRules() []Rule {
-	return config.Rules
-}
-
-func Source() *SourceConfig {
-	return config.Source
-}
-
-func AppPath() string {
-	return config.App.Path
+func (c *Configuration) AppPath() string {
+	return c.App.Path
 }
