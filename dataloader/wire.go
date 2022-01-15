@@ -7,6 +7,7 @@ import (
 	"github.com/margostino/anfield/configuration"
 	"github.com/margostino/anfield/db"
 	"github.com/margostino/anfield/kafka"
+	"github.com/margostino/anfield/scorer"
 )
 
 func NewApp() (*App, error) {
@@ -14,6 +15,7 @@ func NewApp() (*App, error) {
 		kafka.NewConfig,
 		kafka.NewConsumer,
 		db.NewDBConnection,
+		scorer.NewScorer,
 		configuration.GetConfig,
 		wire.Struct(new(App), "*"),
 	)

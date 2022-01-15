@@ -1,16 +1,28 @@
 package scorer
 
 import (
+	"errors"
 	"github.com/margostino/anfield/configuration"
 	"github.com/margostino/anfield/domain"
+	"log"
 	"regexp"
 	"strconv"
 	"strings"
 )
 
+type Scorer struct {
+	Rules []configuration.Rule
+}
+
+func NewScorer(configuration *configuration.Configuration) *Scorer {
+	return &Scorer{
+		Rules: configuration.Rules,
+	}
+}
+
 type Score struct {
-	Time   string
-	Score  float64
+	Time  string
+	Score float64
 }
 
 type Scoring struct {
@@ -21,10 +33,12 @@ const BALL_POSSESSION_RULE = "ball possession"
 
 var entityRegex *regexp.Regexp
 
-func CalculateScoring(homeTeam *domain.Team, awayTeam *domain.Team, commentary *domain.Commentary) map[string]float64 {
+func (s Scorer) CalculateScoring(lineups *domain.Lineups, commentary *domain.Commentary) map[string]float64 {
+	homeTeam := lineups.HomeTeam
+	awayTeam := lineups.AwayTeam
 	var scores = make(map[string]float64)
 	comment := strings.ToLower(commentary.Comment)
-	rules, err := getRules(comment)
+	rules, err := s.getRules(comment)
 
 	if err == nil {
 		mergePlayers(homeTeam, awayTeam)
@@ -61,24 +75,24 @@ func updateTeamsPossession(comment string, ratios *map[string]float64) {
 
 func getScoring(comment string, rules []configuration.Rule) map[string]float64 {
 	var scores = make(map[string]float64)
-	//entities := entityRegex.FindAllString(comment, -1)
-	//ratios := getRatios(comment)
-	//
-	//if entities != nil {
-	//	for _, rule := range rules {
-	//		for _, entity := range entities {
-	//			//for _, scoring := range stats.Players {
-	//			//	match := matchTeamOrPlayer(entity, scoring)
-	//			//	ratio, hasRatio := ratios[entity]
-	//			//	if match && hasRatio {
-	//			//		scores[scoring.Player] = rule.Score * ratio / 100
-	//			//	} else {
-	//			//		scores[scoring.Player] = rule.Score
-	//			//	}
-	//			//}
-	//		}
-	//	}
-	//}
+	entities := entityRegex.FindAllString(comment, -1)
+	//	ratios := getRatios(comment)
+
+	if entities != nil {
+		//for _, rule := range rules {
+		//	for _, entity := range entities {
+		//		for _, scoring := range stats.Players {
+		//			match := matchTeamOrPlayer(entity, scoring)
+		//			ratio, hasRatio := ratios[entity]
+		//			if match && hasRatio {
+		//				scores[scoring.Player] = rule.Score * ratio / 100
+		//			} else {
+		//				scores[scoring.Player] = rule.Score
+		//			}
+		//		}
+		//	}
+		//}
+	}
 	return scores
 }
 
@@ -142,14 +156,14 @@ func ruleLookup(comment string, rules []configuration.Rule) []configuration.Rule
 	return result
 }
 
-func getRules(comment string) ([]configuration.Rule, error) {
+func (s Scorer) getRules(comment string) ([]configuration.Rule, error) {
 	var rules = make([]configuration.Rule, 0)
-	//rules = append(rules, ruleLookup(comment, configuration.ScoringRules())...)
-	//
-	//if len(rules) == 0 {
-	//	log.Printf("MISSING RULE %s", comment)
-	//	return rules, errors.New("missing rule")
-	//}
+	rules = append(rules, ruleLookup(comment, s.Rules)...)
+
+	if len(rules) == 0 {
+		log.Printf("MISSING RULE %s", comment)
+		return rules, errors.New("missing rule")
+	}
 
 	return rules, nil
 }

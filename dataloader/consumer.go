@@ -25,10 +25,8 @@ func (a App) Consume() error {
 			break
 		}
 
-		result := a.upsertCommentary(message)
-		document := decode(result)
-		logging(document)
-		//upsertScoring(message)
+		a.upsertCommentary(message)
+		a.upsertScoring(message)
 	}
 	return nil // TODO: tbd
 }
@@ -39,25 +37,26 @@ func decode(result *mongo2.SingleResult) *Document {
 	return &document
 }
 
-//func upsertScoring(message *domain.Message) {
-//	scores := scorer.CalculateScoring(message.Metadata.HomeTeam, message.Metadata.AwayTeam, message.Data)
-//
-//	for key, value := range scores {
-//		filter := bson.M{"player": key}
-//		update := bson.M{
-//			"$push": bson.M{"scores": value},
-//			"$set":  bson.M{"player": key},
-//		}
-//		result := mongo.Matches.Upsert(filter, update)
-//	}
-//
-//}
+func (a App) upsertScoring(message *domain.Message) {
+	scores := a.scorer.CalculateScoring(message.Metadata.Lineups, message.Data)
 
-func (a App) upsertCommentary(message *domain.Message) *mongo2.SingleResult {
+	for key, value := range scores {
+		filter := bson.M{"player": key}
+		update := bson.M{
+			"$push": bson.M{"scores": value},
+			"$set":  bson.M{"player": key},
+		}
+		a.db.Matches.Upsert(filter, update)
+	}
+
+}
+
+func (a App) upsertCommentary(message *domain.Message) {
 	filter := getFilter(message)
 	update := getUpdateDoc(message)
 	result := a.db.Matches.Upsert(filter, update)
-	return result
+	document := decode(result)
+	logging(document)
 }
 
 func getFilter(message *domain.Message) bson.M {

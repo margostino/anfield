@@ -5,6 +5,7 @@ import (
 	"github.com/margostino/anfield/db"
 	"github.com/margostino/anfield/domain"
 	"github.com/margostino/anfield/kafka"
+	"github.com/margostino/anfield/scorer"
 )
 
 type Channels struct {
@@ -16,6 +17,7 @@ type Channels struct {
 type App struct {
 	kafka         *kafka.Consumer
 	db            *db.Database
+	scorer        *scorer.Scorer
 	configuration *configuration.Configuration
 }
 
