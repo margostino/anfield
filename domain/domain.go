@@ -1,5 +1,7 @@
 package domain
 
+import "time"
+
 type Player struct {
 	Name  string
 	Score float64
@@ -13,9 +15,8 @@ type Team struct {
 
 type Metadata struct {
 	Url     string
-	Id      string
 	Lineups *Lineups
-	Date    string
+	Date    time.Time
 }
 
 type Lineups struct {

@@ -14,7 +14,7 @@ import (
 type Options struct {
 	Database          string
 	MatchesCollection string
-	ScoresCollection  string
+	AssetsCollection  string
 	Hostname          string
 	Port              int
 }
@@ -22,7 +22,7 @@ type Options struct {
 type Database struct {
 	Client  *mongo.Client
 	Matches *DBCollection
-	Scores  *DBCollection
+	Assets  *DBCollection
 }
 
 func Initialize() {
@@ -35,7 +35,7 @@ func DefaultConnectionOpt(configuration *configuration.Configuration) *Options {
 	return &Options{
 		Database:          configuration.Mongo.Database,
 		MatchesCollection: configuration.Mongo.MatchesCollection,
-		ScoresCollection:  configuration.Mongo.ScoresCollection,
+		AssetsCollection:  configuration.Mongo.AssetsCollection,
 		Hostname:          configuration.Mongo.Hostname,
 		Port:              configuration.Mongo.Port,
 	}
@@ -50,8 +50,8 @@ func Connect(dbOptions *Options) *Database {
 	//ctx, _ = context.WithTimeout(context.Background(), 10 * time.Second)
 	err = client.Connect(context.TODO())
 	common.Check(err)
-	scores := &DBCollection{
-		Collection: client.Database(dbOptions.Database).Collection(dbOptions.ScoresCollection),
+	assets := &DBCollection{
+		Collection: client.Database(dbOptions.Database).Collection(dbOptions.AssetsCollection),
 	}
 	matches := &DBCollection{
 		Collection: client.Database(dbOptions.Database).Collection(dbOptions.MatchesCollection),
@@ -59,7 +59,7 @@ func Connect(dbOptions *Options) *Database {
 
 	return &Database{
 		Client:  client,
-		Scores:  scores,
+		Assets:  assets,
 		Matches: matches,
 	}
 }

@@ -1,9 +1,12 @@
 package dataloader
 
 import (
+	"encoding/hex"
 	"fmt"
+	"github.com/margostino/anfield/common"
 	"github.com/margostino/anfield/domain"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	mongo2 "go.mongodb.org/mongo-driver/mongo"
 	"log"
 )
@@ -26,7 +29,7 @@ func (a App) Consume() error {
 		}
 
 		a.upsertCommentary(message)
-		a.upsertScoring(message)
+		a.upsertAssets(message)
 	}
 	return nil // TODO: tbd
 }
@@ -37,7 +40,7 @@ func decode(result *mongo2.SingleResult) *Document {
 	return &document
 }
 
-func (a App) upsertScoring(message *domain.Message) {
+func (a App) upsertAssets(message *domain.Message) {
 	scores := a.scorer.CalculateScoring(message.Metadata.Lineups, message.Data)
 
 	for key, value := range scores {
@@ -46,7 +49,8 @@ func (a App) upsertScoring(message *domain.Message) {
 			"$push": bson.M{"scores": value},
 			"$set":  bson.M{"player": key},
 		}
-		a.db.Matches.Upsert(filter, update)
+		result := a.db.Assets.Upsert(filter, update)
+		print(result)
 	}
 
 }
@@ -60,7 +64,12 @@ func (a App) upsertCommentary(message *domain.Message) {
 }
 
 func getFilter(message *domain.Message) bson.M {
-	return bson.M{"metadata.url": message.Metadata.Url}
+	//return bson.M{"metadata.url": message.Metadata.Url}
+	_, _, identifier := common.ExtractTeamsFrom(message.Metadata.Url)
+	hex := hex.EncodeToString([]byte(identifier + identifier))
+	id, err := primitive.ObjectIDFromHex(hex)
+	common.Check(err)
+	return bson.M{"_id": id}
 }
 
 func getUpdateDoc(message *domain.Message) bson.M {
@@ -71,7 +80,7 @@ func getUpdateDoc(message *domain.Message) bson.M {
 }
 
 func logging(document *Document) {
-	id := document.Metadata.Id
+	id := common.GenerateEventID(document.Metadata.Url)
 	dataLength := len(document.Data.Comments)
 	message := fmt.Sprintf("New Message from %s with data length %d", id, dataLength)
 	log.Println(message)

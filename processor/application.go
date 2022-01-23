@@ -7,11 +7,12 @@ import (
 	"github.com/margostino/anfield/kafka"
 	"github.com/margostino/anfield/scrapper"
 	"sync"
+	"time"
 )
 
 type Channels struct {
 	commentary map[string]chan *domain.Commentary
-	matchDate  map[string]chan string
+	matchDate  map[string]chan time.Time
 	lineups    map[string]chan *domain.Lineups
 }
 

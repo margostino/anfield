@@ -7,6 +7,7 @@ import (
 	"log"
 	"strings"
 	"sync"
+	"time"
 )
 
 //var webScrapper *scrapper.Scrapper
@@ -32,7 +33,7 @@ func Initialize() {
 func NewChannels() *Channels {
 	return &Channels{
 		commentary: make(map[string]chan *domain.Commentary),
-		matchDate:  make(map[string]chan string),
+		matchDate:  make(map[string]chan time.Time),
 		lineups:    make(map[string]chan *domain.Lineups),
 	}
 }
@@ -43,7 +44,7 @@ func NewWaitGroups() sync.Map {
 
 func (a App) InitializeChannels(url string) {
 	a.waitGroups.Store(url, common.WaitGroup(4))
-	a.channels.matchDate[url] = make(chan string)
+	a.channels.matchDate[url] = make(chan time.Time)
 	a.channels.lineups[url] = make(chan *domain.Lineups)
 	a.channels.commentary[url] = make(chan *domain.Commentary)
 }

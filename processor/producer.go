@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func (a App) getEventDate(url string) string {
+func (a App) getEventDate(url string) time.Time {
 	infoUrl := url + a.configuration.Scrapper.InfoParams
 	selector := a.configuration.Scrapper.InfoSelector
 	startTimeDetail := a.scrapper.GoPage(infoUrl).Text(selector)
@@ -20,7 +20,7 @@ func (a App) getEventDate(url string) string {
 	year := strings.Split(startTime, " ")[2]
 	normalizedStartTime := fmt.Sprintf("%s-%s-%s", year, common.NormalizeMonth(month), common.NormalizeDay(day))
 	eventDate, _ := time.Parse("2006-01-02", normalizedStartTime)
-	return eventDate.String()
+	return eventDate
 }
 
 func (a App) getLineups(url string) (*domain.Team, *domain.Team) {
