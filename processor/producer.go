@@ -105,7 +105,6 @@ func getFormation(raw string) []domain.Player {
 func newPlayer(name string) *domain.Player {
 	return &domain.Player{
 		Name:  name,
-		Score: 0,
 	}
 }
 

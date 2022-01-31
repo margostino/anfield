@@ -3,8 +3,7 @@ package domain
 import "time"
 
 type Player struct {
-	Name  string
-	Score float64
+	Name string
 }
 
 type Team struct {

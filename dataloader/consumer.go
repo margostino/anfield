@@ -81,7 +81,7 @@ func getUpdateCompletion(message *domain.Message) bson.M {
 func getUpdateCommentary(message *domain.Message) bson.M {
 	return bson.M{
 		"$push": bson.M{"data.comments": message.Data},
-		"$set":  bson.M{"metadata": message.Metadata},
+		"$set":  bson.M{"metadata": message.Metadata, "lineups": message.Lineups},
 	}
 }
 

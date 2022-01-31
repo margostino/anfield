@@ -144,6 +144,7 @@ func inProgress(status string) bool {
 	return common.IsTimeCounter(prefix)
 }
 
+// TODO: support partial completion and continue
 func (a App) shouldProcess(url string) bool {
 	queryFilter := db.GetUrlFilter(url)
 	document := a.db.Matches.FindOne(queryFilter)
