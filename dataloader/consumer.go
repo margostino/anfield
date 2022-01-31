@@ -1,6 +1,7 @@
 package dataloader
 
 import (
+	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
 	"github.com/margostino/anfield/common"
@@ -8,7 +9,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	mongo2 "go.mongodb.org/mongo-driver/mongo"
+	"io"
 	"log"
+	"time"
 )
 
 type Data struct {
@@ -44,26 +47,23 @@ func (a App) upsertAssets(message *domain.Message) {
 	scores := a.scorer.CalculateScoring(message.Metadata.Lineups, message.Data)
 
 	for key, value := range scores {
-		filter := bson.M{"player": key}
-		update := bson.M{
-			"$push": bson.M{"scores": value},
-			"$set":  bson.M{"player": key},
-		}
-		result := a.db.Assets.Upsert(filter, update)
-		print(result)
+		filter := getAssetsFilter(key)
+		update := getUpdateAssets(key, value)
+		a.db.Assets.Upsert(filter, update)
+		print(1)
 	}
 
 }
 
 func (a App) upsertCommentary(message *domain.Message) {
-	filter := getFilter(message)
-	update := getUpdateDoc(message)
+	filter := getCommentaryFilter(message)
+	update := getUpdateCommentary(message)
 	result := a.db.Matches.Upsert(filter, update)
 	document := decode(result)
 	logging(document)
 }
 
-func getFilter(message *domain.Message) bson.M {
+func getCommentaryFilter(message *domain.Message) bson.M {
 	//return bson.M{"metadata.url": message.Metadata.Url}
 	_, _, identifier := common.ExtractTeamsFrom(message.Metadata.Url)
 	hex := hex.EncodeToString([]byte(identifier + identifier))
@@ -72,10 +72,24 @@ func getFilter(message *domain.Message) bson.M {
 	return bson.M{"_id": id}
 }
 
-func getUpdateDoc(message *domain.Message) bson.M {
+func getAssetsFilter(key string) bson.M {
+	hash := sha1.New()
+	io.WriteString(hash, key)
+	id := hex.EncodeToString(hash.Sum(nil))
+	return bson.M{"_id": id}
+}
+
+func getUpdateCommentary(message *domain.Message) bson.M {
 	return bson.M{
 		"$push": bson.M{"data.comments": message.Data},
 		"$set":  bson.M{"metadata": message.Metadata},
+	}
+}
+
+func getUpdateAssets(name string, score float64) bson.M {
+	return bson.M{
+		"$inc": bson.M{"score": score},
+		"$set": bson.M{"name": name, "last_updated": time.Now().UTC()},
 	}
 }
 
