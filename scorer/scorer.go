@@ -70,8 +70,6 @@ func (s Scorer) CalculateScoring(lineups *domain.Lineups, commentary *domain.Com
 		ratios := getSharedRatios(comment)
 
 		if entities != nil {
-			print(ratios)
-			print(rules)
 			for _, rule := range rules {
 				for _, entity := range entities {
 					//match := matchTeamOrPlayer(entity, scoring)

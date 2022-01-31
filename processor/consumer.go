@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"fmt"
 	"github.com/margostino/anfield/domain"
 	"log"
 	"time"
@@ -32,39 +33,42 @@ func (a App) consume(url string) {
 	}
 
 	metadata = &domain.Metadata{
-		Url:     url,
-		Lineups: lineups,
-		Date:    date,
+		Url:  url,
+		Date: date,
 	}
 
-	event = NewEvent(metadata)
+	event = NewEvent(metadata, lineups)
 	a.enrich(event)
 	done(url)
 }
 
-func NewEvent(metadata *domain.Metadata) *domain.Event {
+func NewEvent(metadata *domain.Metadata, lineups *domain.Lineups) *domain.Event {
 	return &domain.Event{
 		Metadata: metadata,
+		Lineups:  lineups,
 		Data:     make([]*domain.Commentary, 0),
 	}
 }
 
 func (a App) enrich(event *domain.Event) {
 	url := event.Metadata.Url
-	//h2h := event.Metadata.H2H
 	for {
 		commentary := <-a.channels.commentary[url]
 		event.Data = append(event.Data, commentary)
 
 		time.Sleep(100 * time.Millisecond) // TODO: configurable
 
-		if end(commentary) {
+		if end(commentary) { // TODO: define and set TTL just in case
+			a.logger.info(fmt.Sprintf("End of match %s", url))
+			event.Metadata.Finished = true
+			a.kafka.Produce(event.Metadata, nil, nil)
 			break
 		} else if notStarted(commentary) {
-			a.kafka.Produce(event.Metadata, nil)
+			a.logger.info(fmt.Sprintf("Match %s is not started", url))
+			a.kafka.Produce(event.Metadata, nil, nil)
 		} else {
 			a.logger.log(url, commentary)
-			a.kafka.Produce(event.Metadata, commentary)
+			a.kafka.Produce(event.Metadata, commentary, event.Lineups)
 		}
 	}
 }

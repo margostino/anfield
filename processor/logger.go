@@ -22,6 +22,10 @@ func NewLogger(configuration *configuration.Configuration) *Logger {
 	}
 }
 
+func (l *Logger) info(message string) {
+	log.Println(message)
+}
+
 func (l *Logger) log(url string, commentary *domain.Commentary) {
 	step := l.configuration.Logger.CompletionStep
 	var time, additionalTime, totalTime int

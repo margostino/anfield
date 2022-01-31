@@ -14,9 +14,9 @@ type Team struct {
 }
 
 type Metadata struct {
-	Url     string
-	Lineups *Lineups
-	Date    time.Time
+	Url      string
+	Date     time.Time
+	Finished bool
 }
 
 type Lineups struct {
@@ -31,10 +31,21 @@ type Commentary struct {
 
 type Event struct {
 	Metadata *Metadata
+	Lineups  *Lineups
 	Data     []*Commentary
 }
 
 type Message struct {
 	Metadata *Metadata
+	Lineups  *Lineups
 	Data     *Commentary
+}
+
+type Data struct {
+	Comments []Commentary
+}
+
+type Document struct {
+	Metadata *Metadata
+	Data     *Data
 }

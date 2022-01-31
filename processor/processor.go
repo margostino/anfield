@@ -3,6 +3,7 @@ package processor
 import (
 	"github.com/go-rod/rod"
 	"github.com/margostino/anfield/common"
+	"github.com/margostino/anfield/db"
 	"github.com/margostino/anfield/domain"
 	"log"
 	"strings"
@@ -58,10 +59,12 @@ func (a App) Process(urls []string) error {
 		waitGroup = common.WaitGroup(len(urls) * (1 + 1 + 1 + 1))
 		log.Println("Events to process: ", eventsToProcess)
 		for _, url := range urls {
-			a.InitializeChannels(url)
-			a.produce(url)
-			go a.consume(url)
-			//wait(url)
+			if a.shouldProcess(url) {
+				a.InitializeChannels(url)
+				a.produce(url)
+				go a.consume(url)
+				//wait(url)
+			}
 		}
 		waitGroup.Wait()
 	}
@@ -139,4 +142,10 @@ func (a App) getMatchUrlsFrom(url string) []string {
 func inProgress(status string) bool {
 	prefix := strings.Split(status, "\n")[0]
 	return common.IsTimeCounter(prefix)
+}
+
+func (a App) shouldProcess(url string) bool {
+	queryFilter := db.GetUrlFilter(url)
+	document := a.db.Matches.FindOne(queryFilter)
+	return document.Metadata == nil || (document.Metadata != nil && !document.Metadata.Finished)
 }

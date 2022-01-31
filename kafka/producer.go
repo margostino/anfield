@@ -29,10 +29,11 @@ func NewProducer(config *Config) *Producer {
 	}
 }
 
-func (w *Producer) Produce(metadata *domain.Metadata, commentary *domain.Commentary) {
+func (w *Producer) Produce(metadata *domain.Metadata, commentary *domain.Commentary, lineups *domain.Lineups) {
 	var message = domain.Message{
 		Metadata: metadata,
 		Data:     commentary,
+		Lineups:  lineups,
 	}
 	messageBytes, _ := json.Marshal(message)
 	id := strings.Split(metadata.Url, "/")[8]
