@@ -62,6 +62,7 @@ type MongoConfig struct {
 	Database          string `yaml:"database"`
 	MatchesCollection string `yaml:"matchesCollection"`
 	AssetsCollection  string `yaml:"assetsCollection"`
+	UsersCollection   string `yaml:"usersCollection"`
 }
 type BotConfig struct {
 	Token                string  `yaml:"token"`

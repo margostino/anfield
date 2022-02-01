@@ -44,7 +44,30 @@ type Data struct {
 	Comments []Commentary
 }
 
-type Document struct {
+type User struct {
+	Username  string
+	FirstName string
+	LastName  string
+	Id        int
+}
+
+// MongoDB Collections
+// TODO: isolate data model domain
+
+type MatchDocument struct {
 	Metadata *Metadata
 	Data     *Data
+}
+
+type AssetDocument struct {
+	Name        string
+	Score       float64
+	LastUpdated time.Time
+}
+
+type UserDocument struct {
+	Username  string
+	FirstName string
+	LastName  string
+	Id        int
 }

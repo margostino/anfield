@@ -2,10 +2,51 @@ package bot
 
 import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/margostino/anfield/common"
+	"github.com/margostino/anfield/configuration"
+	"github.com/margostino/anfield/domain"
 	"log"
 )
 
+var matches = make([]string, 0)
+var subscriptions = make(map[int64][]string)
+var following = make(map[int64][]string)
 var previousMessage string
+
+func Matches() []string {
+	return matches
+}
+
+func NewBot(configuration *configuration.Configuration) *tgbotapi.BotAPI {
+	bot, error := tgbotapi.NewBotAPI(configuration.Bot.Token)
+	common.Check(error)
+	//bot.Debug = true
+	log.Printf("Authorized on account %s", bot.Self.UserName)
+	return bot
+}
+
+func NewChannel() chan domain.User {
+	return make(chan domain.User)
+}
+
+func (a App) poll(updates tgbotapi.UpdatesChannel) {
+	a.Process(updates)
+}
+
+func (a App) listen() tgbotapi.UpdatesChannel {
+	updateConfig := tgbotapi.NewUpdate(0)
+	updateConfig.Timeout = 60
+	updates, _ := a.bot.GetUpdatesChan(updateConfig)
+	return updates
+}
+
+func (a App) welcome() {
+	for _, chatId := range a.configuration.Bot.ChatIds {
+		msg := tgbotapi.NewMessage(chatId, "Hi!!!")
+		msg.ReplyMarkup = nil
+		a.bot.Send(msg)
+	}
+}
 
 func (a App) Reply(update *tgbotapi.Update) (string, interface{}) {
 	var markup interface{}
@@ -13,6 +54,12 @@ func (a App) Reply(update *tgbotapi.Update) (string, interface{}) {
 	message := update.Message.Text
 	//username := update.Message.Chat.UserName
 	userId := update.Message.Chat.ID
+
+	if shouldStart(message) {
+		user := getUserFrom(update)
+		markup, reply = startReply(user)
+		a.subscribe(user)
+	}
 
 	if isSubscription(message) {
 		markup, reply = subscriptionReply()
@@ -37,7 +84,7 @@ func (a App) Reply(update *tgbotapi.Update) (string, interface{}) {
 	}
 
 	if reply == "" {
-		markup, reply = echo(message)
+		markup, reply = echo(message) // TODO: tbd
 	}
 
 	previousMessage = message
@@ -47,6 +94,7 @@ func (a App) Reply(update *tgbotapi.Update) (string, interface{}) {
 
 func (a App) Process(updates tgbotapi.UpdatesChannel) {
 	for update := range updates {
+		go a.consume()
 		if update.Message == nil { // ignore any non-Message Updates
 			continue
 		}
@@ -55,7 +103,7 @@ func (a App) Process(updates tgbotapi.UpdatesChannel) {
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, replyMessage)
 		msg.ReplyMarkup = replyMarkup
 		//msg.ReplyToMessageID = update.Message.MessageID
-		bot.Send(msg)
+		a.bot.Send(msg)
 	}
 }
 
@@ -65,7 +113,7 @@ func (a App) Send(message string) {
 		if IsFollowing(message, chatId) {
 			msg := tgbotapi.NewMessage(chatId, message)
 			msg.ReplyMarkup = nil
-			Bot().Send(msg) // TODO: filtering by subscription options
+			a.bot.Send(msg) // TODO: filtering by subscription options
 		}
 	}
 }
@@ -73,4 +121,14 @@ func (a App) Send(message string) {
 // TODO: define fallback
 func echo(message string) (interface{}, string) {
 	return nil, message
+}
+
+func getUserFrom(update *tgbotapi.Update) *domain.User {
+	user := update.Message.From
+	return &domain.User{
+		Id:        user.ID,
+		Username:  user.UserName,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+	}
 }

@@ -7,20 +7,21 @@ package bot
 
 import (
 	"github.com/margostino/anfield/configuration"
-	"github.com/margostino/anfield/kafka"
+	"github.com/margostino/anfield/db"
 )
 
 // Injectors from wire.go:
 
 func NewApp() (*App, error) {
 	configurationConfiguration := configuration.GetConfig()
-	config := kafka.NewConfig(configurationConfiguration)
-	consumer := kafka.NewConsumer(config)
 	botAPI := NewBot(configurationConfiguration)
+	database := db.NewDBConnection()
+	v := NewChannel()
 	app := &App{
-		kafka:         consumer,
 		bot:           botAPI,
+		db:            database,
 		configuration: configurationConfiguration,
+		subscriptions: v,
 	}
 	return app, nil
 }

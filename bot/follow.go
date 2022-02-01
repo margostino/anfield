@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"github.com/margostino/anfield/common"
 	"strings"
 )
 
@@ -31,12 +32,12 @@ func shouldUnfollowPlayer(previousMessage string) bool {
 }
 
 func followReply(message string, userId int64) (interface{}, string) {
-	Follow(userId, message)
+	follow(userId, message)
 	return nil, "Done!"
 }
 
 func unfollowReply(message string, userId int64) (interface{}, string) {
-	Unfollow(userId, message)
+	unfollow(userId, message)
 	return nil, "Done!"
 }
 
@@ -49,4 +50,12 @@ func IsFollowing(message string, chatId int64) bool {
 		}
 	}
 	return false
+}
+
+func follow(userId int64, player string) {
+	following[userId] = append(following[userId], player)
+}
+
+func unfollow(userId int64, player string) {
+	following[userId] = common.Remove(following[userId], player)
 }

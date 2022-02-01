@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"fmt"
 	"github.com/go-rod/rod"
 	"github.com/margostino/anfield/common"
 	"github.com/margostino/anfield/db"
@@ -44,7 +45,7 @@ func NewWaitGroups() sync.Map {
 }
 
 func (a App) InitializeChannels(url string) {
-	a.waitGroups.Store(url, common.WaitGroup(4))
+	//a.waitGroups.Store(url, common.WaitGroup(4))
 	a.channels.matchDate[url] = make(chan time.Time)
 	a.channels.lineups[url] = make(chan *domain.Lineups)
 	a.channels.commentary[url] = make(chan *domain.Commentary)
@@ -63,7 +64,9 @@ func (a App) Process(urls []string) error {
 				a.InitializeChannels(url)
 				a.produce(url)
 				go a.consume(url)
-				//wait(url)
+			} else {
+				a.logger.info(fmt.Sprintf("URL %s was already processed", url))
+				waitGroup.Add(-4)
 			}
 		}
 		waitGroup.Wait()

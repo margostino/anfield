@@ -39,7 +39,7 @@ func (a App) consume(url string) {
 
 	event = NewEvent(metadata, lineups)
 	a.enrich(event)
-	done(url)
+	done()
 }
 
 func NewEvent(metadata *domain.Metadata, lineups *domain.Lineups) *domain.Event {
@@ -73,7 +73,7 @@ func (a App) enrich(event *domain.Event) {
 	}
 }
 
-func done(url string) {
+func done() {
 	//wg, _ := waitGroups.Load(url)
 	//wg.(*sync.WaitGroup).Done()
 	waitGroup.Done()

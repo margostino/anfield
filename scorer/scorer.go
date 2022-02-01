@@ -225,6 +225,7 @@ func (s Scorer) getRules(comment string) ([]configuration.Rule, error) {
 	var rules = make([]configuration.Rule, 0)
 	rules = append(rules, ruleLookup(comment, s.Rules)...)
 
+	// TODO: stopwords/rules
 	if len(rules) == 0 {
 		log.Printf("MISSING RULE %s", comment)
 		return rules, errors.New("missing rule")

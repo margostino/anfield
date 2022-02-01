@@ -3,6 +3,7 @@ package bot
 import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/margostino/anfield/common"
+	"github.com/margostino/anfield/domain"
 )
 
 func getSubscriptionOptions() interface{} {
@@ -37,6 +38,10 @@ func subscriptionReply() (interface{}, string) {
 }
 
 func matchSubscriptionReply(message string, userId int64) (interface{}, string) {
-	Subscribe(userId, message)
+	//subscribe(userId, message)
 	return nil, "Done!"
+}
+
+func (a App) subscribe(user *domain.User) {
+	a.subscriptions <- *user
 }

@@ -1,10 +1,14 @@
 package db
 
 import (
+	"crypto/sha1"
 	"encoding/hex"
 	"github.com/margostino/anfield/common"
+	"github.com/margostino/anfield/domain"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"io"
+	"time"
 )
 
 func GetUrlFilter(url string) bson.M {
@@ -13,4 +17,51 @@ func GetUrlFilter(url string) bson.M {
 	id, err := primitive.ObjectIDFromHex(hex)
 	common.Check(err)
 	return bson.M{"_id": id}
+}
+
+func GetUserFilter(userId int) bson.M {
+	id := hashFrom(string(userId))
+	return bson.M{"_id": id}
+}
+
+func GetAssetsFilter(key string) bson.M {
+	id := hashFrom(key)
+	return bson.M{"_id": id}
+}
+
+func GetUpdateAssets(name string, score float64) bson.M {
+	return bson.M{
+		"$inc": bson.M{"score": score},
+		"$set": bson.M{"name": name, "last_updated": time.Now().UTC()},
+	}
+}
+
+func GetUpdateUser(user domain.User) bson.M {
+	return bson.M{
+		"$set": bson.M{
+			"user_id":    user.Id,
+			"username":   user.Username,
+			"first_name": user.FirstName,
+			"last_name":  user.LastName,
+		},
+	}
+}
+
+func GetUpdateCompletion(message *domain.Message) bson.M {
+	return bson.M{
+		"$set": bson.M{"metadata.finished": message.Metadata.Finished},
+	}
+}
+
+func GetUpdateCommentary(message *domain.Message) bson.M {
+	return bson.M{
+		"$push": bson.M{"data.comments": message.Data},
+		"$set":  bson.M{"metadata": message.Metadata, "lineups": message.Lineups},
+	}
+}
+
+func hashFrom(key string) string {
+	hash := sha1.New()
+	io.WriteString(hash, key)
+	return hex.EncodeToString(hash.Sum(nil))
 }

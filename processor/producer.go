@@ -116,7 +116,7 @@ func (a App) produce(url string) {
 
 func (a App) matchDate(url string) {
 	a.channels.matchDate[url] <- a.getEventDate(url)
-	done(url)
+	done()
 }
 
 func (a App) lineups(url string) {
@@ -126,7 +126,7 @@ func (a App) lineups(url string) {
 		AwayTeam: awayTeam,
 	}
 	a.channels.lineups[url] <- lineups
-	done(url)
+	done()
 }
 
 // TODO: implement proper stop in loop but scan all partial events
@@ -173,7 +173,7 @@ func (a App) commentary(url string) {
 	log.Println("END event processing:", eventName)
 
 	close(a.channels.commentary[url])
-	done(url)
+	done()
 }
 
 func NewFlagCommentary(flag string) *domain.Commentary {
