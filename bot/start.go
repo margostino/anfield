@@ -25,3 +25,7 @@ func startReply(user *domain.User) (interface{}, string) {
 
 	return nil, fmt.Sprintf("Hi %s, Welcome to Anfield!", name)
 }
+
+func (a App) subscribe(user *domain.User) {
+	a.subscriptions <- *user
+}

@@ -3,6 +3,7 @@ package db
 import (
 	"crypto/sha1"
 	"encoding/hex"
+	"fmt"
 	"github.com/margostino/anfield/common"
 	"github.com/margostino/anfield/domain"
 	"go.mongodb.org/mongo-driver/bson"
@@ -19,7 +20,7 @@ func GetUrlFilter(url string) bson.M {
 	return bson.M{"_id": id}
 }
 
-func GetUserFilter(userId int) bson.M {
+func GetUserFilter(userId int64) bson.M {
 	id := hashFrom(string(userId))
 	return bson.M{"_id": id}
 }
@@ -29,6 +30,14 @@ func GetAssetsFilter(key string) bson.M {
 	return bson.M{"_id": id}
 }
 
+func GetAssetsPatternFilter(key string) bson.M {
+	return bson.M{
+		"name": bson.M{
+			"$regex": fmt.Sprintf(".*%s*", key), // TODO: improve regex, more robust
+		},
+	}
+}
+
 func GetUpdateAssets(name string, score float64) bson.M {
 	return bson.M{
 		"$inc": bson.M{"score": score},
@@ -36,14 +45,21 @@ func GetUpdateAssets(name string, score float64) bson.M {
 	}
 }
 
-func GetUpdateUser(user domain.User) bson.M {
+func GetUpdateUser(budget float64) bson.M {
 	return bson.M{
-		"$set": bson.M{
-			"user_id":    user.Id,
-			"username":   user.Username,
-			"first_name": user.FirstName,
-			"last_name":  user.LastName,
-		},
+		"$inc": bson.M{"wallet.budget": budget},
+		"$set": bson.M{"wallet.last_updated": time.Now().UTC()},
+	}
+}
+
+func GetInsertUser(user domain.User, wallet *domain.Wallet) bson.M {
+	return bson.M{
+		"_id":        hashFrom(string(user.Id)),
+		"user_id":    user.Id,
+		"username":   user.Username,
+		"first_name": user.FirstName,
+		"last_name":  user.LastName,
+		"wallet":     wallet,
 	}
 }
 

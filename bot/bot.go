@@ -6,21 +6,18 @@ import (
 	"github.com/margostino/anfield/configuration"
 	"github.com/margostino/anfield/domain"
 	"log"
+	"strconv"
 )
 
-var matches = make([]string, 0)
-var subscriptions = make(map[int64][]string)
-var following = make(map[int64][]string)
-var previousMessage string
-
-func Matches() []string {
-	return matches
-}
+// TODO: implement DB in mem for history.
+// TODO: set limit
+var messagesHistory map[int64][]string
 
 func NewBot(configuration *configuration.Configuration) *tgbotapi.BotAPI {
 	bot, error := tgbotapi.NewBotAPI(configuration.Bot.Token)
 	common.Check(error)
 	//bot.Debug = true
+	messagesHistory = make(map[int64][]string)
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 	return bot
 }
@@ -48,6 +45,7 @@ func (a App) welcome() {
 	}
 }
 
+// Reply TODO: improve (reduce) amount ifs conditions. Make it generic
 func (a App) Reply(update *tgbotapi.Update) (string, interface{}) {
 	var markup interface{}
 	var reply string
@@ -61,33 +59,30 @@ func (a App) Reply(update *tgbotapi.Update) (string, interface{}) {
 		a.subscribe(user)
 	}
 
-	if isSubscription(message) {
-		markup, reply = subscriptionReply()
-	} else if shouldSubscribeToMatch(previousMessage, message) {
-		markup, reply = matchSubscriptionReply(message, userId)
-	}
-
-	if shouldFollow(message) {
-		markup, reply = followQuestion()
-	} else if shouldFollowPlayer(previousMessage) {
-		markup, reply = followReply(message, userId)
-	}
-
-	if shouldUnfollow(message) {
-		markup, reply = unfollowQuestion()
-	} else if shouldUnfollowPlayer(previousMessage) {
-		markup, reply = unfollowReply(message, userId)
-	}
-
 	if shouldShowStats(message) {
 		markup, reply = a.showStats(userId)
+	}
+
+	if isBuying(message) {
+		// TODO: support asset+value in one command reply
+		markup, reply = buyAssetQuestion()
+	} else if shouldBuyAsset(getAllMessages(userId)) {
+		markup, reply = buyUnitsQuestion()
+	} else if shouldBuyAssetUnits(getAllMessages(userId)) {
+		assetName := getLastMessage(userId)
+		units, err := strconv.Atoi(message)
+		if err != nil {
+			markup, reply = buyInvalidUnits()
+		} else {
+			a.buy(userId, assetName, units)
+		}
 	}
 
 	if reply == "" {
 		markup, reply = echo(message) // TODO: tbd
 	}
 
-	previousMessage = message
+	appendPreviousMessage(userId, message)
 
 	return reply, markup
 }
@@ -109,13 +104,13 @@ func (a App) Process(updates tgbotapi.UpdatesChannel) {
 
 func (a App) Send(message string) {
 	// TODO: use subscription instead of static IDs from config
-	for _, chatId := range a.configuration.Bot.ChatIds {
-		if IsFollowing(message, chatId) {
-			msg := tgbotapi.NewMessage(chatId, message)
-			msg.ReplyMarkup = nil
-			a.bot.Send(msg) // TODO: filtering by subscription options
-		}
-	}
+	//for _, chatId := range a.configuration.Bot.ChatIds {
+	//	if IsFollowing(message, chatId) {
+	//		msg := tgbotapi.NewMessage(chatId, message)
+	//		msg.ReplyMarkup = nil
+	//		a.bot.Send(msg) // TODO: filtering by subscription options
+	//	}
+	//}
 }
 
 // TODO: define fallback
@@ -131,4 +126,31 @@ func getUserFrom(update *tgbotapi.Update) *domain.User {
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 	}
+}
+
+func appendPreviousMessage(id int64, message string) {
+	messagesHistory[id] = append(messagesHistory[id], message)
+}
+
+func getFirstMessage(id int64) string {
+	if messages, ok := messagesHistory[id]; ok {
+		if len(messages) > 0 {
+			return messagesHistory[id][0]
+		}
+	}
+	return ""
+}
+
+func getLastMessage(id int64) string {
+	if messages, ok := messagesHistory[id]; ok {
+		return messagesHistory[id][len(messages)-1]
+	}
+	return ""
+}
+
+func getAllMessages(id int64) []string {
+	if messages, ok := messagesHistory[id]; ok {
+		return messages
+	}
+	return nil
 }

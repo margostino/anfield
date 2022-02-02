@@ -61,6 +61,7 @@ func (a App) Process(urls []string) error {
 		log.Println("Events to process: ", eventsToProcess)
 		for _, url := range urls {
 			if a.shouldProcess(url) {
+				// TODO: if match already exists then remove it and start from the beginning
 				a.InitializeChannels(url)
 				a.produce(url)
 				go a.consume(url)
@@ -150,6 +151,6 @@ func inProgress(status string) bool {
 // TODO: support partial completion and continue
 func (a App) shouldProcess(url string) bool {
 	queryFilter := db.GetUrlFilter(url)
-	document := a.db.Matches.FindOne(queryFilter)
+	document := a.db.Matches.FindOneMatch(queryFilter)
 	return document.Metadata == nil || (document.Metadata != nil && !document.Metadata.Finished)
 }

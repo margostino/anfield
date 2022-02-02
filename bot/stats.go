@@ -1,9 +1,5 @@
 package bot
 
-import (
-	"strings"
-)
-
 // TODO: enrich stats with more information (last update, highest/lowest, etc...)
 // TODO: add command to explain stats
 // TODO: add command to alert trends and changes and automate buy/sell operation given conditions (e.g. threshold)
@@ -31,12 +27,12 @@ func (a App) showStats(userId int64) (interface{}, string) {
 
 // TODO: normalize player names (and keys) everywhere to avoid FOR lookup
 func isFollowing(player string, userId int64) bool {
-	lowerPlayer := strings.ToLower(player)
-	for _, value := range following[userId] {
-		lowerValue := strings.ToLower(value)
-		if strings.Contains(lowerPlayer, lowerValue) {
-			return true
-		}
-	}
+	//lowerPlayer := strings.ToLower(player)
+	//for _, value := range following[userId] {
+	//	lowerValue := strings.ToLower(value)
+	//	if strings.Contains(lowerPlayer, lowerValue) {
+	//		return true
+	//	}
+	//}
 	return false
 }

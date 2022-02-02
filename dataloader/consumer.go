@@ -29,6 +29,7 @@ func (a App) Consume() error {
 func (a App) upsertAssets(message *domain.Message) {
 	scores := a.scorer.CalculateScoring(message.Lineups, message.Data)
 
+	// TODO: normalize key entity
 	for key, value := range scores {
 		filter := db.GetAssetsFilter(key)
 		update := db.GetUpdateAssets(key, value)

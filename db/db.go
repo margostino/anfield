@@ -21,10 +21,11 @@ type Options struct {
 }
 
 type Database struct {
-	Client  *mongo.Client
-	Matches *Collection
-	Assets  *Collection
-	Users   *Collection
+	Client       *mongo.Client
+	Matches      *Collection
+	Assets       *Collection
+	Users        *Collection
+	Transactions *Collection
 }
 
 func Initialize() {

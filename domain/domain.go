@@ -51,8 +51,14 @@ type User struct {
 	Id        int
 }
 
+type Wallet struct {
+	Budget      float64
+	LastUpdated time.Time `bson:"last_updated"`
+}
+
 // MongoDB Collections
 // TODO: isolate data model domain
+// TODO: separate Metadata/Data from App/DB domain
 
 type MatchDocument struct {
 	Metadata *Metadata
@@ -66,8 +72,17 @@ type AssetDocument struct {
 }
 
 type UserDocument struct {
+	Id        int
 	Username  string
 	FirstName string
 	LastName  string
-	Id        int
+	Wallet    *Wallet
+}
+
+type TransactionDocument struct {
+	UserId    string
+	AssetId   string
+	Units     int
+	Value     float64
+	Timestamp time.Time
 }
