@@ -82,7 +82,7 @@ func (a App) Reply(update *tgbotapi.Update) (string, interface{}) {
 		markup, reply = echo(message) // TODO: tbd
 	}
 
-	appendPreviousMessage(userId, message)
+	appendPreviousMessage(userId, message) // TODO: improve this buffer strategy for back and forth
 
 	return reply, markup
 }
