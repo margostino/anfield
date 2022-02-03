@@ -53,6 +53,10 @@ func (a App) Reply(update *tgbotapi.Update) (string, interface{}) {
 	//username := update.Message.Chat.UserName
 	userId := update.Message.Chat.ID
 
+	if isCommand(message) {
+		cleanupAllPreviousMessagesBy(userId)
+	}
+
 	if shouldStart(message) {
 		user := getUserFrom(update)
 		markup, reply = startReply(user)
@@ -128,8 +132,16 @@ func getUserFrom(update *tgbotapi.Update) *domain.User {
 	}
 }
 
+func cleanupAllPreviousMessagesBy(userId int64) {
+	messagesHistory[userId] = make([]string, 0)
+}
+
 func appendPreviousMessage(id int64, message string) {
 	messagesHistory[id] = append(messagesHistory[id], message)
+}
+
+func isCommand(message string) bool {
+	return message[0:1] == "/"
 }
 
 func getFirstMessage(id int64) string {

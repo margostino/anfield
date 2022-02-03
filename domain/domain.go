@@ -56,6 +56,14 @@ type Wallet struct {
 	LastUpdated time.Time `bson:"last_updated"`
 }
 
+type Transaction struct {
+	UserId    string
+	AssetId   string
+	Units     int
+	Value     float64
+	Timestamp time.Time
+}
+
 // MongoDB Collections
 // TODO: isolate data model domain
 // TODO: separate Metadata/Data from App/DB domain
@@ -66,16 +74,18 @@ type MatchDocument struct {
 }
 
 type AssetDocument struct {
+	Id          string `bson:"_id"`
 	Name        string
 	Score       float64
 	LastUpdated time.Time
 }
 
 type UserDocument struct {
-	Id        int
+	Id        string `bson:"_id"`
+	SocialId  int64  `bson:"social_id"`
 	Username  string
-	FirstName string
-	LastName  string
+	FirstName string `bson:"first_name"`
+	LastName  string `bson:"last_name"`
 	Wallet    *Wallet
 }
 

@@ -12,12 +12,13 @@ import (
 )
 
 type Options struct {
-	Database          string
-	MatchesCollection string
-	AssetsCollection  string
-	UsersCollection   string
-	Hostname          string
-	Port              int
+	Database               string
+	MatchesCollection      string
+	AssetsCollection       string
+	UsersCollection        string
+	TransactionsCollection string
+	Hostname               string
+	Port                   int
 }
 
 type Database struct {
@@ -36,12 +37,13 @@ func Initialize() {
 
 func DefaultConnectionOpt(configuration *configuration.Configuration) *Options {
 	return &Options{
-		Database:          configuration.Mongo.Database,
-		MatchesCollection: configuration.Mongo.MatchesCollection,
-		AssetsCollection:  configuration.Mongo.AssetsCollection,
-		UsersCollection:   configuration.Mongo.UsersCollection,
-		Hostname:          configuration.Mongo.Hostname,
-		Port:              configuration.Mongo.Port,
+		Database:               configuration.Mongo.Database,
+		MatchesCollection:      configuration.Mongo.MatchesCollection,
+		AssetsCollection:       configuration.Mongo.AssetsCollection,
+		UsersCollection:        configuration.Mongo.UsersCollection,
+		TransactionsCollection: configuration.Mongo.TransactionsCollection,
+		Hostname:               configuration.Mongo.Hostname,
+		Port:                   configuration.Mongo.Port,
 	}
 }
 
@@ -63,12 +65,16 @@ func Connect(dbOptions *Options) *Database {
 	users := &Collection{
 		Collection: client.Database(dbOptions.Database).Collection(dbOptions.UsersCollection),
 	}
+	transactions := &Collection{
+		Collection: client.Database(dbOptions.Database).Collection(dbOptions.TransactionsCollection),
+	}
 
 	return &Database{
-		Client:  client,
-		Assets:  assets,
-		Matches: matches,
-		Users:   users,
+		Client:       client,
+		Assets:       assets,
+		Matches:      matches,
+		Users:        users,
+		Transactions: transactions,
 	}
 }
 

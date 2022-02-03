@@ -55,11 +55,21 @@ func GetUpdateUser(budget float64) bson.M {
 func GetInsertUser(user domain.User, wallet *domain.Wallet) bson.M {
 	return bson.M{
 		"_id":        hashFrom(string(user.Id)),
-		"user_id":    user.Id,
+		"social_id":  user.Id,
 		"username":   user.Username,
 		"first_name": user.FirstName,
 		"last_name":  user.LastName,
 		"wallet":     wallet,
+	}
+}
+
+func GetInsertTransaction(transaction *domain.Transaction) bson.M {
+	return bson.M{
+		"user_id":   transaction.UserId,
+		"asset_id":  transaction.AssetId,
+		"units":     transaction.Units,
+		"value":     transaction.Value,
+		"timestamp": transaction.Timestamp,
 	}
 }
 

@@ -18,8 +18,8 @@ func (a App) consume() {
 }
 
 func (a App) createUser(user domain.User, wallet *domain.Wallet) {
-	update := db.GetInsertUser(user, wallet)
-	err := a.db.Users.InsertUser(update)
+	document := db.GetInsertUser(user, wallet)
+	err := a.db.Users.Insert(document)
 
 	if err == nil {
 		message := fmt.Sprintf("New Subscription from %s", user.Username)

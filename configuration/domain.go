@@ -57,12 +57,13 @@ type KafkaConfig struct {
 }
 
 type MongoConfig struct {
-	Hostname          string `yaml:"hostname"`
-	Port              int    `yaml:"port"`
-	Database          string `yaml:"database"`
-	MatchesCollection string `yaml:"matchesCollection"`
-	AssetsCollection  string `yaml:"assetsCollection"`
-	UsersCollection   string `yaml:"usersCollection"`
+	Hostname               string `yaml:"hostname"`
+	Port                   int    `yaml:"port"`
+	Database               string `yaml:"database"`
+	MatchesCollection      string `yaml:"matchesCollection"`
+	AssetsCollection       string `yaml:"assetsCollection"`
+	UsersCollection        string `yaml:"usersCollection"`
+	TransactionsCollection string `yaml:"transactionsCollection"`
 }
 type BotConfig struct {
 	Token                string  `yaml:"token"`

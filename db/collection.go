@@ -31,7 +31,7 @@ func (c *Collection) UpsertUser(filter interface{}, document interface{}) *domai
 	return decodeUser(result)
 }
 
-func (c *Collection) InsertUser(document interface{}) error {
+func (c *Collection) Insert(document interface{}) error {
 	_, err := c.insert(document)
 	if err != nil {
 		log.Println(err.Error())
@@ -49,8 +49,13 @@ func (c *Collection) FindOneMatch(filter interface{}) *domain.MatchDocument {
 func (c *Collection) FindOneAsset(filter interface{}) *domain.AssetDocument {
 	options := findOneOptions()
 	result := c.Collection.FindOne(context.TODO(), filter, options)
-	//common.Check(result.Err()) // TODO: verify result. This fails in case of different error
 	return decodeAsset(result)
+}
+
+func (c *Collection) FindOneUser(filter interface{}) *domain.UserDocument {
+	options := findOneOptions()
+	result := c.Collection.FindOne(context.TODO(), filter, options)
+	return decodeUser(result)
 }
 
 func (c *Collection) upsert(filter interface{}, document interface{}) *mongo.SingleResult {
