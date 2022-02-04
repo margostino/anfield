@@ -1,5 +1,11 @@
 package bot
 
+import (
+	"errors"
+	"strconv"
+	"strings"
+)
+
 func isSelling(message string) bool {
 	return message == "/sell"
 }
@@ -9,25 +15,26 @@ func isBuying(message string) bool {
 	return message == "/buy"
 }
 
-func shouldBuyAsset(previousMessages []string) bool {
-	return len(previousMessages) == 1 && isBuying(previousMessages[0])
+func shouldBuyAsset(messages []string) bool {
+	return len(messages) == 1 && isBuying(messages[0])
 }
 
-func shouldBuyAssetUnits(previousMessages []string) bool {
-	return len(previousMessages) == 2 && isBuying(previousMessages[0]) && previousMessages[1] != ""
-}
-
-func buyAssetQuestion() (interface{}, string) {
-	reply := "Which asset would do like to buy?"
+func buyAssetValueInstruction() (interface{}, string) {
+	reply := "Please send Asset Name and Value separated by space.\nExample:\nsalah 2"
 	return nil, reply
 }
 
-func buyUnitsQuestion() (interface{}, string) {
-	reply := "How much would do like to buy?"
-	return nil, reply
-}
+func extractTransactionFrom(message string) (string, int, error) {
+	values := strings.Split(message, " ")
 
-func buyInvalidUnits() (interface{}, string) {
-	reply := "Units invalid. It should be a number."
-	return nil, reply
+	if len(values) == 2 {
+		assetName := values[0]
+		units, err := strconv.Atoi(values[1])
+		if err != nil {
+			return "", -1, errors.New("input is invalid. Unit input should be a number")
+		}
+		return assetName, units, nil
+	}
+
+	return "", -1, errors.New("input is invalid. Input should be 2 values separated by space (Example: Salah 10)")
 }

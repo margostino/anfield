@@ -2,6 +2,11 @@ package domain
 
 import "time"
 
+const (
+	BUY  = "buy"
+	SELL = "sell"
+)
+
 type Player struct {
 	Name string
 }
@@ -28,10 +33,10 @@ type Commentary struct {
 	Comment string
 }
 
-type Event struct {
+type Match struct {
 	Metadata *Metadata
 	Lineups  *Lineups
-	Data     []*Commentary
+	Data     *Commentary
 }
 
 type Message struct {
@@ -45,10 +50,11 @@ type Data struct {
 }
 
 type User struct {
+	SocialId  int
 	Username  string
 	FirstName string
 	LastName  string
-	Id        int
+	Wallet    *Wallet
 }
 
 type Wallet struct {
@@ -61,7 +67,14 @@ type Transaction struct {
 	AssetId   string
 	Units     int
 	Value     float64
+	Operation string
 	Timestamp time.Time
+}
+
+type Asset struct {
+	Name        string
+	Score       float64
+	LastUpdated time.Time `bson:"last_updated"`
 }
 
 // MongoDB Collections
@@ -77,7 +90,7 @@ type AssetDocument struct {
 	Id          string `bson:"_id"`
 	Name        string
 	Score       float64
-	LastUpdated time.Time
+	LastUpdated time.Time `bson:"last_updated"`
 }
 
 type UserDocument struct {
@@ -86,7 +99,12 @@ type UserDocument struct {
 	Username  string
 	FirstName string `bson:"first_name"`
 	LastName  string `bson:"last_name"`
-	Wallet    *Wallet
+	Wallet    *WalletDocument
+}
+
+type WalletDocument struct {
+	Budget      float64
+	LastUpdated time.Time `bson:"last_updated"`
 }
 
 type TransactionDocument struct {

@@ -11,7 +11,7 @@ import (
 // TODO: consumer does not need be a goroutine if it implements a infinite loop, unless we want extra process after that.
 // This aggregation in consumer should happen once by URL/Event
 func (a App) consume(url string) {
-	var event *domain.Event
+	var event *domain.Match
 	var metadata *domain.Metadata
 	var lineups *domain.Lineups
 	var date time.Time
@@ -37,38 +37,38 @@ func (a App) consume(url string) {
 		Date: date,
 	}
 
-	event = NewEvent(metadata, lineups)
+	event = NewMatch(metadata, lineups)
 	a.enrich(event)
 	done()
 }
 
-func NewEvent(metadata *domain.Metadata, lineups *domain.Lineups) *domain.Event {
-	return &domain.Event{
+func NewMatch(metadata *domain.Metadata, lineups *domain.Lineups) *domain.Match {
+	return &domain.Match{
 		Metadata: metadata,
 		Lineups:  lineups,
-		Data:     make([]*domain.Commentary, 0),
+		Data:     nil,
 	}
 }
 
-func (a App) enrich(event *domain.Event) {
-	url := event.Metadata.Url
+func (a App) enrich(match *domain.Match) {
+	url := match.Metadata.Url
 	for {
 		commentary := <-a.channels.commentary[url]
-		event.Data = append(event.Data, commentary)
+		match.Data = commentary
 
-		time.Sleep(100 * time.Millisecond) // TODO: configurable
+		//time.Sleep(100 * time.Millisecond) // TODO: configurable
 
 		if end(commentary) { // TODO: define and set TTL just in case
 			a.logger.info(fmt.Sprintf("End of match %s", url))
-			event.Metadata.Finished = true
-			a.kafka.Produce(event.Metadata, nil, nil)
+			match.Metadata.Finished = true
+			a.kafka.Produce(match.Metadata, nil, nil)
 			break
 		} else if notStarted(commentary) {
 			a.logger.info(fmt.Sprintf("Match %s is not started", url))
-			a.kafka.Produce(event.Metadata, nil, nil)
+			a.kafka.Produce(match.Metadata, nil, nil)
 		} else {
 			a.logger.log(url, commentary)
-			a.kafka.Produce(event.Metadata, commentary, event.Lineups)
+			a.kafka.Produce(match.Metadata, commentary, match.Lineups)
 		}
 	}
 }

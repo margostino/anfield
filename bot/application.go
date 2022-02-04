@@ -8,10 +8,11 @@ import (
 )
 
 type App struct {
-	bot           *tgbotapi.BotAPI
+	actions       []Actions
 	db            *db.Database
-	configuration *configuration.Configuration
 	subscriptions chan domain.User
+	bot           *tgbotapi.BotAPI
+	configuration *configuration.Configuration
 }
 
 func (a App) Start() error {

@@ -4,69 +4,31 @@ import (
 	"context"
 	"github.com/margostino/anfield/common"
 	"github.com/margostino/anfield/domain"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"log"
 )
 
 type Collection struct {
 	Collection *mongo.Collection
 }
 
-func (c *Collection) UpsertMatch(filter interface{}, document interface{}) *domain.MatchDocument {
-	result := c.upsert(filter, document)
-	common.Check(result.Err())
-	return decodeMatch(result)
-}
-
-func (c *Collection) UpsertAsset(filter interface{}, document interface{}) *domain.AssetDocument {
-	result := c.upsert(filter, document)
-	common.Check(result.Err())
-	return decodeAsset(result)
-}
-
-func (c *Collection) UpsertUser(filter interface{}, document interface{}) *domain.UserDocument {
-	result := c.upsert(filter, document)
-	common.Check(result.Err())
-	return decodeUser(result)
+func (c *Collection) Upsert(filter bson.M, update bson.M, document interface{}) error {
+	options := upsertOptions()
+	result := c.Collection.FindOneAndUpdate(context.TODO(), filter, update, options)
+	return decode(result, document)
 }
 
 func (c *Collection) Insert(document interface{}) error {
-	_, err := c.insert(document)
-	if err != nil {
-		log.Println(err.Error())
-	}
+	options := insertOptions()
+	_, err := c.Collection.InsertOne(context.TODO(), document, options)
 	return err
 }
 
-func (c *Collection) FindOneMatch(filter interface{}) *domain.MatchDocument {
+func (c *Collection) FindOne(filter bson.M, document interface{}) error {
 	options := findOneOptions()
 	result := c.Collection.FindOne(context.TODO(), filter, options)
-	//common.Check(result.Err()) // TODO: verify result. This fails in case of different error
-	return decodeMatch(result)
-}
-
-func (c *Collection) FindOneAsset(filter interface{}) *domain.AssetDocument {
-	options := findOneOptions()
-	result := c.Collection.FindOne(context.TODO(), filter, options)
-	return decodeAsset(result)
-}
-
-func (c *Collection) FindOneUser(filter interface{}) *domain.UserDocument {
-	options := findOneOptions()
-	result := c.Collection.FindOne(context.TODO(), filter, options)
-	return decodeUser(result)
-}
-
-func (c *Collection) upsert(filter interface{}, document interface{}) *mongo.SingleResult {
-	options := upsertOptions()
-	result := c.Collection.FindOneAndUpdate(context.TODO(), filter, document, options)
-	return result
-}
-
-func (c *Collection) insert(document interface{}) (*mongo.InsertOneResult, error) {
-	options := insertOptions()
-	return c.Collection.InsertOne(context.TODO(), document, options)
+	return decode(result, document)
 }
 
 func upsertOptions() *options.FindOneAndUpdateOptions {
@@ -88,25 +50,41 @@ func findOneOptions() *options.FindOneOptions {
 		//ReturnKey: &returnKey,
 	}
 }
-
-// TODO: generics to reduce boilerplate
-
-func decodeMatch(result *mongo.SingleResult) *domain.MatchDocument {
-	var document domain.MatchDocument
-	result.Decode(&document)
-	return &document
+func UpsertAssets(asset *domain.Asset) (bson.M, bson.M) {
+	filter := FilterBy(asset.Name)
+	update := UpdateAssetQuery(asset)
+	return filter, update
+}
+func UpsertWallet(id string, value float64) (bson.M, bson.M) {
+	filter := bson.M{"_id": id}
+	update := UpdateWalletQuery(value)
+	return filter, update
 }
 
-func decodeAsset(result *mongo.SingleResult) *domain.AssetDocument {
-	var document domain.AssetDocument
-	result.Decode(&document)
-	return &document
+func UpsertMatch(match *domain.Match) (bson.M, bson.M) {
+	_, _, identifier := common.ExtractTeamsFrom(match.Metadata.Url)
+	filter := FilterBy(identifier)
+	update := UpdateMatchQuery(match)
+	return filter, update
 }
 
-func decodeUser(result *mongo.SingleResult) *domain.UserDocument {
-	var document domain.UserDocument
-	result.Decode(&document)
-	return &document
+func UpsertMatchCompletion(match *domain.Match) (bson.M, bson.M) {
+	filter := MatchFilter(match.Metadata.Url)
+	update := UpdateCompletionQuery(match)
+	return filter, update
+}
+
+func MatchFilter(url string) bson.M {
+	_, _, identifier := common.ExtractTeamsFrom(url)
+	return FilterBy(identifier)
+}
+
+func decode(result *mongo.SingleResult, document interface{}) error {
+	if common.IsError(result.Err()) {
+		return result.Err()
+	}
+	result.Decode(document)
+	return nil
 }
 
 func isDuplicatedWrite(err error) bool {

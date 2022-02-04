@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/margostino/anfield/domain"
 	"github.com/segmentio/kafka-go"
 	"log"
 )
@@ -29,14 +28,13 @@ func NewConsumer(config *Config) *Consumer {
 	}
 }
 
-func (r *Consumer) ReadMessage() (*domain.Message, error) {
-	var message domain.Message
+func (r *Consumer) Consume(event interface{}) error {
 	m, err := r.Client.ReadMessage(context.Background())
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	unmarshalError := json.Unmarshal(m.Value, &message)
+	unmarshalError := json.Unmarshal(m.Value, &event)
 
 	if unmarshalError != nil {
 		fmt.Printf("Error when consuming message: %s\n", unmarshalError.Error())
@@ -44,7 +42,7 @@ func (r *Consumer) ReadMessage() (*domain.Message, error) {
 
 	//fmt.Printf("Message at offset %d: %s\n", m.Offset, string(m.Key))
 
-	return &message, nil
+	return nil
 }
 
 func (r *Consumer) Close() {

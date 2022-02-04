@@ -6,18 +6,17 @@ import (
 	"github.com/margostino/anfield/configuration"
 	"github.com/margostino/anfield/domain"
 	"log"
-	"strconv"
 )
 
 // TODO: implement DB in mem for history.
 // TODO: set limit
-var messagesHistory map[int64][]string
+var messagesHistory map[int][]string
 
 func NewBot(configuration *configuration.Configuration) *tgbotapi.BotAPI {
 	bot, error := tgbotapi.NewBotAPI(configuration.Bot.Token)
 	common.Check(error)
 	//bot.Debug = true
-	messagesHistory = make(map[int64][]string)
+	messagesHistory = make(map[int][]string)
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 	return bot
 }
@@ -46,12 +45,12 @@ func (a App) welcome() {
 }
 
 // Reply TODO: improve (reduce) amount ifs conditions. Make it generic
+// Reply: TODO: support one shot command values
 func (a App) Reply(update *tgbotapi.Update) (string, interface{}) {
-	var markup interface{}
 	var reply string
+	var markup interface{}
 	message := update.Message.Text
-	//username := update.Message.Chat.UserName
-	userId := update.Message.Chat.ID
+	userId := update.Message.From.ID
 
 	if isCommand(message) {
 		cleanupAllPreviousMessagesBy(userId)
@@ -59,31 +58,29 @@ func (a App) Reply(update *tgbotapi.Update) (string, interface{}) {
 
 	if shouldStart(message) {
 		user := getUserFrom(update)
-		markup, reply = startReply(user)
+		markup, reply = replyStart(user)
 		a.subscribe(user)
 	}
 
 	if shouldShowStats(message) {
-		markup, reply = a.showStats(userId)
+		markup, reply = replyStats(userId)
 	}
 
 	if isBuying(message) {
 		// TODO: support asset+value in one command reply
-		markup, reply = buyAssetQuestion()
+		markup, reply = buyAssetValueInstruction()
 	} else if shouldBuyAsset(getAllMessages(userId)) {
-		markup, reply = buyUnitsQuestion()
-	} else if shouldBuyAssetUnits(getAllMessages(userId)) {
-		assetName := getLastMessage(userId)
-		units, err := strconv.Atoi(message)
+		assetName, units, err := extractTransactionFrom(message)
 		if err != nil {
-			markup, reply = buyInvalidUnits()
+			markup, reply = nil, err.Error()
 		} else {
 			a.buy(userId, assetName, units)
+			cleanupAllPreviousMessagesBy(userId)
 		}
 	}
 
 	if reply == "" {
-		markup, reply = echo(message) // TODO: tbd
+		markup, reply = fallback()
 	}
 
 	appendPreviousMessage(userId, message) // TODO: improve this buffer strategy for back and forth
@@ -117,26 +114,25 @@ func (a App) Send(message string) {
 	//}
 }
 
-// TODO: define fallback
-func echo(message string) (interface{}, string) {
-	return nil, message
+func fallback() (interface{}, string) {
+	return nil, "Input is not expected"
 }
 
 func getUserFrom(update *tgbotapi.Update) *domain.User {
-	user := update.Message.From
+	from := update.Message.From
 	return &domain.User{
-		Id:        user.ID,
-		Username:  user.UserName,
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
+		SocialId:  from.ID,
+		Username:  from.UserName,
+		FirstName: from.FirstName,
+		LastName:  from.LastName,
 	}
 }
 
-func cleanupAllPreviousMessagesBy(userId int64) {
+func cleanupAllPreviousMessagesBy(userId int) {
 	messagesHistory[userId] = make([]string, 0)
 }
 
-func appendPreviousMessage(id int64, message string) {
+func appendPreviousMessage(id int, message string) {
 	messagesHistory[id] = append(messagesHistory[id], message)
 }
 
@@ -144,7 +140,7 @@ func isCommand(message string) bool {
 	return message[0:1] == "/"
 }
 
-func getFirstMessage(id int64) string {
+func getFirstMessage(id int) string {
 	if messages, ok := messagesHistory[id]; ok {
 		if len(messages) > 0 {
 			return messagesHistory[id][0]
@@ -153,14 +149,14 @@ func getFirstMessage(id int64) string {
 	return ""
 }
 
-func getLastMessage(id int64) string {
+func getLastMessage(id int) string {
 	if messages, ok := messagesHistory[id]; ok {
 		return messagesHistory[id][len(messages)-1]
 	}
 	return ""
 }
 
-func getAllMessages(id int64) []string {
+func getAllMessages(id int) []string {
 	if messages, ok := messagesHistory[id]; ok {
 		return messages
 	}

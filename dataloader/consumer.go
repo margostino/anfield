@@ -6,50 +6,56 @@ import (
 	"github.com/margostino/anfield/db"
 	"github.com/margostino/anfield/domain"
 	"log"
+	"time"
 )
 
 func (a App) Consume() error {
 	for {
-		message, err := a.kafka.ReadMessage()
+		var match domain.Match
+		err := a.kafka.Consume(&match)
 
-		if err != nil {
+		if err != nil || match.Metadata == nil {
 			break
 		}
 
-		if message.Metadata.Finished {
-			a.upsertCompletion(message)
+		if match.Metadata.Finished {
+			a.updateCompletion(&match)
 		} else {
-			a.upsertCommentary(message)
-			a.upsertAssets(message)
+			a.updateCommentary(&match)
+			a.updateAssets(&match)
 		}
 	}
 	return nil // TODO: tbd
 }
 
-func (a App) upsertAssets(message *domain.Message) {
-	scores := a.scorer.CalculateScoring(message.Lineups, message.Data)
+func (a App) updateAssets(match *domain.Match) {
+	scores := a.scorer.CalculateScoring(match.Lineups, match.Data)
 
 	// TODO: normalize key entity
-	for key, value := range scores {
-		filter := db.GetAssetsFilter(key)
-		update := db.GetUpdateAssets(key, value)
-		a.db.Assets.UpsertAsset(filter, update)
+	for name, score := range scores {
+		var document domain.AssetDocument
+		asset := &domain.Asset{
+			Name:        name,
+			Score:       score,
+			LastUpdated: time.Now().UTC(),
+		}
+		filter, update := db.UpsertAssets(asset)
+		a.db.Assets.Upsert(filter, update, &document)
 	}
-
 }
 
-func (a App) upsertCompletion(message *domain.Message) {
-	filter := db.GetUrlFilter(message.Metadata.Url)
-	update := db.GetUpdateCompletion(message)
-	document := a.db.Matches.UpsertMatch(filter, update)
-	logging(document)
+func (a App) updateCompletion(match *domain.Match) {
+	var document domain.MatchDocument
+	filter, update := db.UpsertMatchCompletion(match)
+	a.db.Matches.Upsert(filter, update, document)
+	logging(&document)
 }
 
-func (a App) upsertCommentary(message *domain.Message) {
-	filter := db.GetUrlFilter(message.Metadata.Url)
-	update := db.GetUpdateCommentary(message)
-	document := a.db.Matches.UpsertMatch(filter, update)
-	logging(document)
+func (a App) updateCommentary(match *domain.Match) {
+	var document domain.MatchDocument
+	filter, update := db.UpsertMatch(match)
+	a.db.Matches.Upsert(filter, update, &document)
+	logging(&document)
 }
 
 func logging(document *domain.MatchDocument) {

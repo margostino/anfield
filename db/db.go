@@ -21,6 +21,7 @@ type Options struct {
 	Port                   int
 }
 
+// Database TODO: slice of collections
 type Database struct {
 	Client       *mongo.Client
 	Matches      *Collection

@@ -1,8 +1,11 @@
 package common
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
 	"fmt"
 	"hash/fnv"
+	"io"
 	"log"
 	"reflect"
 	"regexp"
@@ -26,6 +29,10 @@ func Check(e error) {
 		log.Fatal(e)
 		panic(e)
 	}
+}
+
+func IsError(e error) bool {
+	return e != nil
 }
 
 func InSlice(value, slice interface{}) bool {
@@ -159,4 +166,14 @@ func ExtractTeamsFrom(url string) (string, string, string) {
 	}
 
 	return home, away, identifier
+}
+
+func HashFrom(seed string) string {
+	hash := sha1.New()
+	io.WriteString(hash, seed)
+	return hex.EncodeToString(hash.Sum(nil))
+}
+
+func Now() time.Time {
+	return time.Now().UTC()
 }

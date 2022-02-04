@@ -9,7 +9,7 @@ func shouldShowStats(message string) bool {
 	return message == "/stats"
 }
 
-func (a App) showStats(userId int64) (interface{}, string) {
+func replyStats(userId int) (interface{}, string) {
 	var reply string
 	//players := scorer.Scorings().Players
 	//for key, value := range players {

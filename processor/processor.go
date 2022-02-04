@@ -150,7 +150,8 @@ func inProgress(status string) bool {
 
 // TODO: support partial completion and continue
 func (a App) shouldProcess(url string) bool {
-	queryFilter := db.GetUrlFilter(url)
-	document := a.db.Matches.FindOneMatch(queryFilter)
+	var document domain.MatchDocument
+	filter := db.MatchFilter(url)
+	a.db.Matches.FindOne(filter, document)
 	return document.Metadata == nil || (document.Metadata != nil && !document.Metadata.Finished)
 }

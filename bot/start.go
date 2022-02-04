@@ -14,7 +14,7 @@ func shouldStart(message string) bool {
 	return message == "/start"
 }
 
-func startReply(user *domain.User) (interface{}, string) {
+func replyStart(user *domain.User) (interface{}, string) {
 	var name string
 
 	if user.FirstName != "" {
