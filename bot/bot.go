@@ -1,10 +1,10 @@
 package bot
 
 import (
+	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/margostino/anfield/common"
 	"github.com/margostino/anfield/configuration"
-	"github.com/margostino/anfield/domain"
 	"log"
 )
 
@@ -21,8 +21,8 @@ func NewBot(configuration *configuration.Configuration) *tgbotapi.BotAPI {
 	return bot
 }
 
-func NewChannel() chan domain.User {
-	return make(chan domain.User)
+func NewMessagesBuffer() map[int]string {
+	return make(map[int]string)
 }
 
 func (a App) poll(updates tgbotapi.UpdatesChannel) {
@@ -47,8 +47,10 @@ func (a App) welcome() {
 // Reply TODO: improve (reduce) amount ifs conditions. Make it generic
 // Reply: TODO: support one shot command values
 func (a App) Reply(update *tgbotapi.Update) (string, interface{}) {
-	var reply string
+	var input, reply string
 	var markup interface{}
+	var isBufferEnabled bufferEnabled
+
 	message := update.Message.Text
 	userId := update.Message.From.ID
 
@@ -56,28 +58,41 @@ func (a App) Reply(update *tgbotapi.Update) (string, interface{}) {
 		cleanupAllPreviousMessagesBy(userId)
 	}
 
-	if shouldStart(message) {
-		user := getUserFrom(update)
-		markup, reply = replyStart(user)
-		a.subscribe(user)
-	}
+	for _, action := range a.actions {
 
-	if shouldShowStats(message) {
-		markup, reply = replyStats(userId)
-	}
-
-	if isBuying(message) {
-		// TODO: support asset+value in one command reply
-		markup, reply = buyAssetValueInstruction()
-	} else if shouldBuyAsset(getAllMessages(userId)) {
-		assetName, units, err := extractTransactionFrom(message)
-		if err != nil {
-			markup, reply = nil, err.Error()
+		if preMessage, ok := a.messageBuffer[userId]; ok {
+			input = fmt.Sprintf("%s %s", preMessage, message)
 		} else {
-			a.buy(userId, assetName, units)
-			cleanupAllPreviousMessagesBy(userId)
+			input = message
 		}
+
+		if action.shouldReply(input) {
+			markup, reply, isBufferEnabled = action.reply(update)
+
+			if isBufferEnabled {
+				a.messageBuffer[userId] = message
+			} else {
+				delete(a.messageBuffer, userId)
+			}
+
+			return reply, markup
+		}
+
 	}
+
+	//if isBuying(message) {
+	//	// TODO: support asset+value in one command reply
+	//	markup, reply = buyAssetValueInstruction()
+	//} else if shouldBuyAsset(getAllMessages(userId)) {
+	//	assetName, units, err := extractTransactionFrom(message)
+	//	if err != nil {
+	//		markup, reply = nil, err.Error()
+	//	} else {
+	//		//transaction, err := a.buy(userId, assetName, units)
+	//		a.buy(userId, assetName, units)
+	//		cleanupAllPreviousMessagesBy(userId)
+	//	}
+	//}
 
 	if reply == "" {
 		markup, reply = fallback()
@@ -90,7 +105,7 @@ func (a App) Reply(update *tgbotapi.Update) (string, interface{}) {
 
 func (a App) Process(updates tgbotapi.UpdatesChannel) {
 	for update := range updates {
-		go a.consume()
+		//go a.consume()
 		if update.Message == nil { // ignore any non-Message Updates
 			continue
 		}
@@ -116,16 +131,6 @@ func (a App) Send(message string) {
 
 func fallback() (interface{}, string) {
 	return nil, "Input is not expected"
-}
-
-func getUserFrom(update *tgbotapi.Update) *domain.User {
-	from := update.Message.From
-	return &domain.User{
-		SocialId:  from.ID,
-		Username:  from.UserName,
-		FirstName: from.FirstName,
-		LastName:  from.LastName,
-	}
 }
 
 func cleanupAllPreviousMessagesBy(userId int) {

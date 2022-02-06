@@ -13,15 +13,17 @@ import (
 // Injectors from wire.go:
 
 func NewApp() (*App, error) {
+	database := db.NewDBConnection()
+	v := NewActions(database)
 	configurationConfiguration := configuration.GetConfig()
 	botAPI := NewBot(configurationConfiguration)
-	database := db.NewDBConnection()
-	v := NewChannel()
+	v2 := NewMessagesBuffer()
 	app := &App{
-		bot:           botAPI,
+		actions:       v,
 		db:            database,
+		bot:           botAPI,
 		configuration: configurationConfiguration,
-		subscriptions: v,
+		messageBuffer: v2,
 	}
 	return app, nil
 }

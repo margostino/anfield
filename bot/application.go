@@ -4,15 +4,14 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/margostino/anfield/configuration"
 	"github.com/margostino/anfield/db"
-	"github.com/margostino/anfield/domain"
 )
 
 type App struct {
-	actions       []Actions
+	actions       []Action
 	db            *db.Database
-	subscriptions chan domain.User
 	bot           *tgbotapi.BotAPI
 	configuration *configuration.Configuration
+	messageBuffer map[int]string // TODO: currently only Bot support 1 level (ask/reply). Evaluate increase the level.
 }
 
 func (a App) Start() error {

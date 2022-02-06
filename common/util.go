@@ -35,6 +35,11 @@ func IsError(e error) bool {
 	return e != nil
 }
 
+func UTC(time time.Time) string {
+	formattedTime := time.Format("2006-01-02 15:04:05")
+	return fmt.Sprintf("%s (UTC)", formattedTime)
+}
+
 func InSlice(value, slice interface{}) bool {
 	switch reflect.TypeOf(slice).Kind() {
 	case reflect.Slice, reflect.Ptr:
