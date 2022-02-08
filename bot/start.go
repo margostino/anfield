@@ -34,17 +34,20 @@ func (s Start) reply(update *tgbotapi.Update) (interface{}, string, bufferEnable
 
 	go s.subscribe(user)
 
-	return nil, fmt.Sprintf("Hi %s, Welcome to Anfield!", name), false
+	return nil, fmt.Sprintf("👋   Hi %s, Welcome to Anfield!", name), false
 }
 
 func (s Start) subscribe(user *domain.User) {
+	var message string
 	document := db.InsertUserQuery(user)
 	err := s.Users.Insert(document)
 
-	if err == nil {
-		message := fmt.Sprintf("New Subscription from %s", user.Username)
-		log.Println(message)
+	if err != nil && db.IsDuplicatedWrite(err) {
+		message = fmt.Sprintf("User %s already exists", user.Username)
+	} else {
+		message = fmt.Sprintf("New Subscription from %s", user.Username)
 	}
+	log.Println(message)
 }
 
 func User(update *tgbotapi.Update) *domain.User {

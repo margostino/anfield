@@ -60,6 +60,8 @@ type MongoConfig struct {
 	Hostname               string `yaml:"hostname"`
 	Port                   int    `yaml:"port"`
 	Database               string `yaml:"database"`
+	ReplicaSet             string `yaml:"replicaSet"`
+	DirectConnection       bool   `yaml:"directConnection"`
 	MatchesCollection      string `yaml:"matchesCollection"`
 	AssetsCollection       string `yaml:"assetsCollection"`
 	UsersCollection        string `yaml:"usersCollection"`

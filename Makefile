@@ -84,6 +84,7 @@ docker.run.dependencies: d.compose.down
 	make d.compose.up
 	make docker.wait
 	docker-compose ps
+	docker exec mongo1 /scripts/rs-init.sh
 
 .PHONY: docker.stop
 docker.stop: d.compose.down

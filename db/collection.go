@@ -14,15 +14,29 @@ type Collection struct {
 }
 
 func (c *Collection) Upsert(filter bson.M, update bson.M, document interface{}) error {
-	options := upsertOptions()
+	options := upsertOptions(true)
 	result := c.Collection.FindOneAndUpdate(context.TODO(), filter, update, options)
 	return decode(result, document)
 }
 
-func (c *Collection) Insert(document interface{}) error {
+func (c *Collection) UpdateWithContext(filter bson.M, update bson.M, document interface{}, context context.Context) error {
+	options := upsertOptions(false)
+	result := c.Collection.FindOneAndUpdate(context, filter, update, options)
+	return decode(result, document)
+}
+
+func (c *Collection) Update(filter bson.M, update bson.M, document interface{}) error {
+	return c.UpdateWithContext(filter, update, document, context.TODO())
+}
+
+func (c *Collection) InsertWithContext(document interface{}, context context.Context) error {
 	options := insertOptions()
-	_, err := c.Collection.InsertOne(context.TODO(), document, options)
+	_, err := c.Collection.InsertOne(context, document, options)
 	return err
+}
+
+func (c *Collection) Insert(document interface{}) error {
+	return c.InsertWithContext(document, context.TODO())
 }
 
 func (c *Collection) FindOne(filter bson.M, document interface{}) error {
@@ -31,13 +45,16 @@ func (c *Collection) FindOne(filter bson.M, document interface{}) error {
 	return decode(result, document)
 }
 
-func upsertOptions() *options.FindOneAndUpdateOptions {
-	upsert := true
+func upsertOptions(upsert bool) *options.FindOneAndUpdateOptions {
 	after := options.After
 	return &options.FindOneAndUpdateOptions{
 		ReturnDocument: &after,
 		Upsert:         &upsert,
 	}
+}
+
+func updateOptions() *options.UpdateOptions {
+	return &options.UpdateOptions{}
 }
 
 func insertOptions() *options.InsertOneOptions {
@@ -55,7 +72,8 @@ func UpsertAssets(asset *domain.Asset) (bson.M, bson.M) {
 	update := UpdateAssetQuery(asset)
 	return filter, update
 }
-func UpsertWallet(id string, value float64) (bson.M, bson.M) {
+
+func UpdateWallet(id string, value float64) (bson.M, bson.M) {
 	filter := bson.M{"_id": id}
 	update := UpdateWalletQuery(value)
 	return filter, update
@@ -87,7 +105,7 @@ func decode(result *mongo.SingleResult, document interface{}) error {
 	return nil
 }
 
-func isDuplicatedWrite(err error) bool {
+func IsDuplicatedWrite(err error) bool {
 	writeError := err.(mongo.WriteException)
 	return writeError.HasErrorCode(11000)
 }

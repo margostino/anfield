@@ -18,6 +18,8 @@ type Options struct {
 	UsersCollection        string
 	TransactionsCollection string
 	Hostname               string
+	ReplicaSet             string
+	DirectConnection       bool
 	Port                   int
 }
 
@@ -38,19 +40,25 @@ func Initialize() {
 
 func DefaultConnectionOpt(configuration *configuration.Configuration) *Options {
 	return &Options{
-		Database:               configuration.Mongo.Database,
-		MatchesCollection:      configuration.Mongo.MatchesCollection,
-		AssetsCollection:       configuration.Mongo.AssetsCollection,
-		UsersCollection:        configuration.Mongo.UsersCollection,
-		TransactionsCollection: configuration.Mongo.TransactionsCollection,
-		Hostname:               configuration.Mongo.Hostname,
 		Port:                   configuration.Mongo.Port,
+		Hostname:               configuration.Mongo.Hostname,
+		Database:               configuration.Mongo.Database,
+		ReplicaSet:             configuration.Mongo.ReplicaSet,
+		UsersCollection:        configuration.Mongo.UsersCollection,
+		DirectConnection:       configuration.Mongo.DirectConnection,
+		AssetsCollection:       configuration.Mongo.AssetsCollection,
+		MatchesCollection:      configuration.Mongo.MatchesCollection,
+		TransactionsCollection: configuration.Mongo.TransactionsCollection,
 	}
 }
 
 func Connect(dbOptions *Options) *Database {
-	uri := fmt.Sprintf("mongodb://%s:%d", dbOptions.Hostname, dbOptions.Port)
-	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
+	uri := fmt.Sprintf("mongodb://%s:%d/%s", dbOptions.Hostname, dbOptions.Port, dbOptions.Database) // TODO: support replica discovery if master fails
+	options := options.Client().
+		ApplyURI(uri).
+		SetReplicaSet(dbOptions.ReplicaSet).
+		SetDirect(dbOptions.DirectConnection)
+	client, err := mongo.NewClient(options)
 	if err != nil {
 		log.Fatal(err)
 	}

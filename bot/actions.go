@@ -52,6 +52,7 @@ func BuyAction(db *db.Database) (BuyInstruction, Buy) {
 	buy := Buy{
 		Command:      buyCommand,
 		Regex:        regex,
+		Db:           db,
 		Users:        db.Users,
 		Assets:       db.Assets,
 		Transactions: db.Transactions,

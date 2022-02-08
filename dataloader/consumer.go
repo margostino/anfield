@@ -47,7 +47,7 @@ func (a App) updateAssets(match *domain.Match) {
 func (a App) updateCompletion(match *domain.Match) {
 	var document domain.MatchDocument
 	filter, update := db.UpsertMatchCompletion(match)
-	a.db.Matches.Upsert(filter, update, document)
+	a.db.Matches.Upsert(filter, update, &document)
 	logging(&document)
 }
 

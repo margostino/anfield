@@ -1,4 +1,4 @@
-version: '3.7'
+version: '3.8'
 
 services:
 
@@ -39,14 +39,55 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
 
-  mongodb:
+  mongo1:
     image : mongo
-    container_name: mongodb
+    container_name: mongo1
     environment:
       - PUID=1000
       - PGID=1000
     volumes:
-      - ./data/mongodb/database:/data/db
+      - ./data/mongo/data1/database:/data/db
+      - ./bin/rs-init.sh:/scripts/rs-init.sh
+    networks:
+      - mongors-network
+    links:
+      - mongo2
+      - mongo3
     ports:
-      - "27017:27017"
-    restart: unless-stopped
+      - "27021:27017"
+    restart: always
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "dbrs" ]
+
+  mongo2:
+    image : mongo
+    container_name: mongo2
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - ./data/mongo/data2/database:/data/db
+    networks:
+      - mongors-network
+    ports:
+      - "27022:27017"
+    restart: always
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "dbrs" ]
+
+  mongo3:
+    image : mongo
+    container_name: mongo3
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - ./data/mongo/data3/database:/data/db
+    networks:
+      - mongors-network
+    ports:
+      - "27023:27017"
+    restart: always
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "dbrs" ]
+
+networks:
+  mongors-network:
+    driver: bridge
