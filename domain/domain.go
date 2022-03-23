@@ -60,6 +60,13 @@ type User struct {
 type Wallet struct {
 	Budget      float64
 	LastUpdated time.Time `bson:"last_updated"`
+	Assets      []WalletAsset
+}
+
+type WalletAsset struct {
+	Id    string `bson:"_id"`
+	Units int
+	Value float64
 }
 
 type Transaction struct {
@@ -102,9 +109,16 @@ type UserDocument struct {
 	Wallet    *WalletDocument
 }
 
+type WalletAssetDocument struct {
+	Id    string `bson:"_id"`
+	Units int
+	Value float64
+}
+
 type WalletDocument struct {
 	Budget      float64
 	LastUpdated time.Time `bson:"last_updated"`
+	Assets      []WalletAssetDocument
 }
 
 type TransactionDocument struct {

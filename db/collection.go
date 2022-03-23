@@ -19,14 +19,14 @@ func (c *Collection) Upsert(filter bson.M, update bson.M, document interface{}) 
 	return decode(result, document)
 }
 
-func (c *Collection) UpdateWithContext(filter bson.M, update bson.M, document interface{}, context context.Context) error {
-	options := upsertOptions(false)
-	result := c.Collection.FindOneAndUpdate(context, filter, update, options)
-	return decode(result, document)
+func (c *Collection) UpdateWithContext(filter bson.M, update bson.M, context context.Context) error {
+	options := updateOptions()
+	_, err := c.Collection.UpdateOne(context, filter, update, options)
+	return err
 }
 
-func (c *Collection) Update(filter bson.M, update bson.M, document interface{}) error {
-	return c.UpdateWithContext(filter, update, document, context.TODO())
+func (c *Collection) Update(filter bson.M, update bson.M) error {
+	return c.UpdateWithContext(filter, update, context.TODO())
 }
 
 func (c *Collection) InsertWithContext(document interface{}, context context.Context) error {
@@ -73,9 +73,9 @@ func UpsertAssets(asset *domain.Asset) (bson.M, bson.M) {
 	return filter, update
 }
 
-func UpdateWallet(id string, value float64) (bson.M, bson.M) {
+func UpdateWallet(id string, budget float64, assets []domain.AssetWalletDocument) (bson.M, bson.M) {
 	filter := bson.M{"_id": id}
-	update := UpdateWalletQuery(value)
+	update := UpdateWalletQuery(budget, assets)
 	return filter, update
 }
 

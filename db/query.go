@@ -36,17 +36,10 @@ func UpdateAssetQuery(asset *domain.Asset) bson.M {
 	}
 }
 
-func UpdateWalletQuery(value float64) bson.M {
+func UpdateWalletQuery(value float64, assets []domain.WalletAssetDocument) bson.M {
 	return bson.M{
 		"$inc": bson.M{"wallet.budget": value},
-		"$set": bson.M{"wallet.last_updated": time.Now().UTC()},
-	}
-}
-
-func GetUpdateUser(budget float64) bson.M {
-	return bson.M{
-		"$inc": bson.M{"wallet.budget": budget},
-		"$set": bson.M{"wallet.last_updated": time.Now().UTC()},
+		"$set": bson.M{"wallet.assets": assets, "wallet.last_updated": time.Now().UTC()},
 	}
 }
 
@@ -61,7 +54,7 @@ func InsertUserQuery(user *domain.User) bson.M {
 	}
 }
 
-func GetInsertTransaction(transaction *domain.Transaction) bson.M {
+func GetInsertTransaction(transaction domain.Transaction) bson.M {
 	return bson.M{
 		"user_id":   transaction.UserId,
 		"asset_id":  transaction.AssetId,

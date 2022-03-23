@@ -84,7 +84,7 @@ docker.run.dependencies: d.compose.down
 	make d.compose.up
 	make docker.wait
 	docker-compose ps
-	docker exec mongo1 /scripts/rs-init.sh
+	make db.replicas.up
 
 .PHONY: docker.stop
 docker.stop: d.compose.down
@@ -102,3 +102,12 @@ d.compose.down:
 	$(call DOCKER_COMPOSE) down -v || true
 	$(call DOCKER_COMPOSE) rm --force || true
 	docker rm "$(docker ps -a -q)" -f || true
+
+.PHONY: db.replicas.up
+db.replicas.up:
+	docker exec mongo1 /scripts/rs-init.sh
+
+.PHONY: db.bash
+db.bash:
+	docker exec -it mongo1 bash
+

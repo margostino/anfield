@@ -28,7 +28,6 @@ type App struct {
 
 func (a App) Start() error {
 	var urls []string
-	a.waitGroups = sync.Map{}
 	if a.configuration.HasPredefinedEvents() {
 		urls = a.getUrlsByConfig()
 	} else {

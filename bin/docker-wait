@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
 
+docker_wait_replica(){
+  local wait=${1}
+  sleep $wait
+}
+
 docker_wait_until_healthy_or_none(){
   local wait=${1}
   local total_wait=${2}
@@ -37,3 +42,4 @@ docker_validate(){
 
 docker_wait_until_healthy_or_none 0 15
 docker_validate
+docker_wait_replica 5

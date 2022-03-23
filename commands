@@ -3,3 +3,6 @@ MongoDB:
 mongo --port 27021
 rs.slaveOk()
 rs.status()
+
+db.runCommand("ping")
+db.runCommand("ping").ok

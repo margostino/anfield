@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/margostino/anfield/db"
 	"log"
@@ -42,15 +43,15 @@ func BuyAction(db *db.Database) (BuyInstruction, Buy) {
 	instruction := BuyInstruction{
 		Command: "/buy",
 	}
-	buyCommand := "^\\/buy [A-Za-z]+ [1-9]+[0-9]*$"
-	regex, err := regexp.Compile(buyCommand)
+	command := "^\\/buy [A-Za-z]+ [1-9]+[0-9]*$"
+	regex, err := regexp.Compile(command)
 
 	if err != nil {
 		log.Println("Error compiling Regex for Buy Action", err)
 	}
 
 	buy := Buy{
-		Command:      buyCommand,
+		Command:      command,
 		Regex:        regex,
 		Db:           db,
 		Users:        db.Users,
@@ -59,4 +60,31 @@ func BuyAction(db *db.Database) (BuyInstruction, Buy) {
 	}
 
 	return instruction, buy
+}
+
+func SellAction(db *db.Database) (SellInstruction, Sell) {
+	instruction := SellInstruction{
+		Command: "/sell",
+	}
+	command := "^\\/sell [A-Za-z]+ [1-9]+[0-9]*$"
+	regex, err := regexp.Compile(command)
+
+	if err != nil {
+		log.Println("Error compiling Regex for Sell Action", err)
+	}
+
+	buy := Sell{
+		Command:      command,
+		Regex:        regex,
+		Db:           db,
+		Users:        db.Users,
+		Assets:       db.Assets,
+		Transactions: db.Transactions,
+	}
+
+	return instruction, buy
+}
+
+func failureReply() string {
+	return fmt.Sprintf("🔴   Transaction can not be executed now.\n🙏🏻   Please try later.")
 }

@@ -48,6 +48,7 @@ services:
     volumes:
       - ./data/mongo/data1/database:/data/db
       - ./bin/rs-init.sh:/scripts/rs-init.sh
+      - ./bin/db-ping.sh:/scripts/db-ping.sh
     networks:
       - mongors-network
     links:
