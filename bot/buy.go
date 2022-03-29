@@ -54,7 +54,7 @@ func (b Buy) reply(update *tgbotapi.Update) (interface{}, string, bufferEnabled)
 		return nil, failureReply(), false
 	}
 
-	operation, atomicHandler := b.transaction(domain.BUY, user, asset, units)
+	trade, atomicHandler := b.transaction(domain.BUY, user, asset, units)
 
 	session, err := b.Db.Client.StartSession()
 	if err != nil {
@@ -75,12 +75,12 @@ func (b Buy) reply(update *tgbotapi.Update) (interface{}, string, bufferEnabled)
 			"🗳️   Units: %d\n"+
 			"💵   Value: %.2f\n"+
 			"💰   Total: %.2f",
-			common.UTC(newTransaction.Timestamp),
-			newTransaction.Operation,
-			newTransaction.AssetId,
-			newTransaction.Units,
-			newTransaction.Value,
-			-1*total,
+			common.UTC(trade.Transaction.Timestamp),
+			trade.Transaction.Operation,
+			trade.Transaction.AssetId,
+			trade.Transaction.Units,
+			trade.Transaction.Value,
+			-1*trade.Total,
 		)
 	}
 

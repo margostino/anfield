@@ -46,7 +46,7 @@ func (s Sell) reply(update *tgbotapi.Update) (interface{}, string, bufferEnabled
 	var reply string
 	input := update.Message.Text
 	userId := update.Message.From.ID
-	assetName, units := valuesFromBuySellOperation(input)
+	assetName, units := valuesTradeOperation(input)
 	asset, user, err := s.getTransactionParams(assetName, userId)
 	ctx := context.Background()
 
@@ -137,7 +137,7 @@ func (s Sell) updateWallet(id string, value float64, context mongo.SessionContex
 	return err
 }
 
-func (s Sell) insertTransaction(transaction *domain.Transaction, context mongo.SessionContext) error {
+func (s Sell) insertTransaction(transaction domain.Transaction, context mongo.SessionContext) error {
 	document := db.GetInsertTransaction(transaction)
 	err := s.Transactions.InsertWithContext(document, context)
 	if err != nil {
@@ -149,7 +149,7 @@ func (s Sell) insertTransaction(transaction *domain.Transaction, context mongo.S
 }
 
 func (s Sell) transaction(user *domain.UserDocument, asset *domain.AssetDocument, units int, total float64) (*domain.Transaction, func(sessCtx mongo.SessionContext) (interface{}, error)) {
-	newTransaction := &domain.Transaction{
+	newTransaction := domain.Transaction{
 		UserId:    user.Id,
 		AssetId:   asset.Id,
 		Value:     asset.Score,
@@ -167,5 +167,5 @@ func (s Sell) transaction(user *domain.UserDocument, asset *domain.AssetDocument
 		}
 		return nil, nil
 	}
-	return newTransaction, fc
+	return &newTransaction, fc
 }

@@ -60,7 +60,7 @@ func User(update *tgbotapi.Update) *domain.User {
 		Wallet: &domain.Wallet{
 			Budget:      100000,
 			LastUpdated: common.Now(),
-			Assets:      make([]domain.AssetWallet, 0),
+			Assets:      make([]domain.WalletAsset, 0),
 		},
 	}
 }

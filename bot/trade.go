@@ -43,7 +43,7 @@ func createTrade(operation string, user *domain.UserDocument, asset *domain.Asse
 
 	walletAssets := findAndUpdateAssetInWallet(operation, asset, units, user.Wallet.Assets)
 
-	return TradeOperation{
+	return Trade{
 		Total:        total,
 		Transaction:  transaction,
 		WalletAssets: walletAssets,

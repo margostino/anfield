@@ -73,7 +73,7 @@ func UpsertAssets(asset *domain.Asset) (bson.M, bson.M) {
 	return filter, update
 }
 
-func UpdateWallet(id string, budget float64, assets []domain.AssetWalletDocument) (bson.M, bson.M) {
+func UpdateWallet(id string, budget float64, assets []domain.WalletAssetDocument) (bson.M, bson.M) {
 	filter := bson.M{"_id": id}
 	update := UpdateWalletQuery(budget, assets)
 	return filter, update
