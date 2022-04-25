@@ -77,30 +77,30 @@ func NormalizeDay(day string) string {
 }
 
 func NormalizeMonth(name string) string {
-	switch name {
-	case "January":
+	switch strings.ToLower(name) {
+	case "january":
 		return "01"
-	case "February":
+	case "february":
 		return "02"
-	case "March":
+	case "march":
 		return "03"
-	case "April":
+	case "april":
 		return "04"
-	case "May":
+	case "may":
 		return "05"
-	case "June":
+	case "june":
 		return "06"
-	case "July":
+	case "july":
 		return "07"
-	case "August":
+	case "august":
 		return "08"
-	case "September":
+	case "september":
 		return "09"
-	case "October":
+	case "october":
 		return "10"
-	case "November":
+	case "november":
 		return "11"
-	case "December":
+	case "december":
 		return "12"
 	default:
 		return "-1"
@@ -108,13 +108,13 @@ func NormalizeMonth(name string) string {
 }
 
 func IsTimeCounter(value string) bool {
-	isTime, _ := regexp.MatchString("([0-9]?'|[0-9]{2}'|[0-9]{2}\\+[0-9]+'|HT)$", value)
-	return isTime
+	match, _ := regexp.MatchString("([0-9]?'|[0-9]{2}'|[0-9]{2}\\+[0-9]+'|HT)$", value)
+	return match
 }
 
 func IsFormationNumber(value string) bool {
-	isNumber, _ := regexp.MatchString("[0-9]+$", value)
-	return isNumber
+	match, _ := regexp.MatchString("^\\b[0-9]{1,2}\\b$", value)
+	return match
 }
 
 func Even(number int) bool {

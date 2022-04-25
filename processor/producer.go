@@ -2,7 +2,7 @@ package processor
 
 import (
 	"fmt"
-	"github.com/go-rod/rod"
+	"github.com/go-rod/rod/lib/proto"
 	"github.com/margostino/anfield/common"
 	"github.com/margostino/anfield/domain"
 	"log"
@@ -27,20 +27,16 @@ func (a App) getLineups(url string) (*domain.Team, *domain.Team) {
 	lineupsUrl := url + a.configuration.Scrapper.LineupsParams
 	homeTeamSelector := a.configuration.Scrapper.HomeTeamSelector
 	awayTeamSelector := a.configuration.Scrapper.AwayTeamSelector
-	homeFormSelector := a.configuration.Scrapper.HomeSelector
-	awayFormSelector := a.configuration.Scrapper.AwaySelector
-	substituteSelector := a.configuration.Scrapper.SubstituteSelector
-
+	lineupsSelector := a.configuration.Scrapper.LineupsSelector
 	page := a.scrapper.GoPage(lineupsUrl)
 	homeTeamName := page.Text(homeTeamSelector)
 	awayTeamName := page.Text(awayTeamSelector)
-	rawHomeFormation := page.Text(homeFormSelector)
-	rawAwayFormation := page.Text(awayFormSelector)
-	rawSubstitutes := page.Elements(substituteSelector)
-
-	homeFormation := getFormation(rawHomeFormation)
-	awayFormation := getFormation(rawAwayFormation)
-	homeSubstitutes, awaySubstitutes := getSubstitutes(&rawSubstitutes)
+	rawElements := page.Text(lineupsSelector)
+	lineupsStartFlag := a.configuration.Scrapper.LineupStartFlag
+	substitutesStartFlag := a.configuration.Scrapper.SubstitutesStartFlag
+	rawLineupElements := strings.Split(rawElements, "\n")
+	homeFormation, awayFormation := extractFormationDataElement(rawLineupElements, lineupsStartFlag)
+	homeSubstitutes, awaySubstitutes := extractSubstituteDataElement(rawLineupElements, substitutesStartFlag)
 
 	homeTeam := domain.Team{
 		Name:              homeTeamName,
@@ -55,56 +51,9 @@ func (a App) getLineups(url string) (*domain.Team, *domain.Team) {
 	return &homeTeam, &awayTeam
 }
 
-func getSubstitutes(elements *rod.Elements) ([]domain.Player, []domain.Player) {
-	parseSubstitute := false
-	players := make([]string, 0)
-	normalizedPlayers := make([]string, 0)
-	homeSubstitutes := make([]domain.Player, 0)
-	awaySubstitutes := make([]domain.Player, 0)
-
-	for _, element := range *elements {
-		value := element.MustText()
-		if value == "SUBSTITUTE PLAYERS" {
-			parseSubstitute = true
-		} else if parseSubstitute && !common.IsTimeCounter(value) && !common.InSlice(value, players) {
-			players = strings.Split(value, "\n")
-			break
-		} else if value == "COACHES" {
-			break
-		}
-	}
-
-	for _, value := range players {
-		if !common.IsTimeCounter(value) {
-			normalizedPlayers = append(normalizedPlayers, value)
-		}
-	}
-
-	for i, player := range normalizedPlayers {
-		if common.Even(i) {
-			homeSubstitutes = append(homeSubstitutes, *newPlayer(player))
-		} else {
-			awaySubstitutes = append(awaySubstitutes, *newPlayer(player))
-		}
-	}
-
-	return homeSubstitutes, awaySubstitutes
-}
-
-func getFormation(raw string) []domain.Player {
-	players := make([]domain.Player, 0)
-	values := strings.Split(raw, "\n")
-	for _, value := range values {
-		if !common.IsFormationNumber(value) {
-			players = append(players, *newPlayer(value))
-		}
-	}
-	return players
-}
-
 func newPlayer(name string) *domain.Player {
 	return &domain.Player{
-		Name:  name,
+		Name: name,
 	}
 }
 
@@ -153,7 +102,10 @@ func (a App) commentary(url string) {
 		}
 		rawEvents := a.getEvents(commentaryUrl)
 		if rawEvents != nil {
-			commentaries := normalize(*rawEvents)
+			startFlag := a.configuration.Scrapper.CommentaryStartFlag
+			endFlag := a.configuration.Scrapper.CommentaryEndFlag
+			rawCommentaries := extractCommentaryDataElement(*rawEvents, startFlag, endFlag)
+			commentaries := normalizeCommentary(rawCommentaries)
 			if sent != len(commentaries) {
 				for _, commentary := range commentaries {
 					a.channels.commentary[url] <- commentary
@@ -186,9 +138,19 @@ func NewFlagCommentary(flag string) *domain.Commentary {
 // GetEvents TODO: read events as unbounded streams or until conditions (e.g. 90' time, message pattern, etc)
 func (a App) getEvents(url string) *[]string {
 	moreCommentSelector := a.configuration.Scrapper.MoreCommentsSelector
+	moreCommentTextSelector := a.configuration.Scrapper.MoreCommentsTextSelector
 	commentSelector := a.configuration.Scrapper.CommentarySelector
 	page := a.scrapper.GoPage(url)
-	page.Click(moreCommentSelector)
+	elements := page.Elements(moreCommentSelector)
+
+	for _, value := range elements {
+		text, _ := value.Text()
+		if text == moreCommentTextSelector {
+			btn := value.MustElement("button")
+			btn.Click(proto.InputMouseButtonLeft)
+			break
+		}
+	}
 	rawEvents := page.Text(commentSelector)
 	if rawEvents != "" {
 		events := strings.Split(rawEvents, "\n")
@@ -198,27 +160,104 @@ func (a App) getEvents(url string) *[]string {
 	return nil
 }
 
-func normalize(comments []string) []*domain.Commentary {
-	var time string
-	var commentaries = make([]*domain.Commentary, 0)
+func extractCommentaryDataElement(elements []string, startFlag string, endFlag string) []string {
+	var index string
+	var shouldStartNormalizing, shouldContinueNormalizing bool
+	var results = make([]string, 0)
 
-	for _, value := range comments {
+	for _, value := range elements {
+		shouldStartNormalizing = value == startFlag
 		if common.IsTimeCounter(value) {
-			time = value
-		} else {
-			commentary := domain.Commentary{
-				Time:    time,
-				Comment: value,
+			index = value
+		} else if shouldStartNormalizing || shouldContinueNormalizing {
+			shouldContinueNormalizing = !(value == endFlag)
+			if !shouldStartNormalizing && shouldContinueNormalizing && index != "" {
+				results = append(results, index, value)
+				index = ""
 			}
-			commentaries = append(commentaries, &commentary)
-			time = ""
 		}
 	}
-	reverse(&commentaries)
+	reverse(&results)
+	return results
+}
+
+func extractFormationDataElement(elements []string, startFlag string) ([]domain.Player, []domain.Player) {
+	homeFormation := make([]domain.Player, 0)
+	awayFormation := make([]domain.Player, 0)
+	var moreFlagsBeforeExtracting bool
+	startIndexLookup := 0
+	startFlagValues := strings.Split(startFlag, ",")
+
+	for _, value := range elements {
+		if startIndexLookup < len(startFlagValues) {
+			moreFlagsBeforeExtracting = value == startFlagValues[startIndexLookup] || startFlagValues[startIndexLookup] == "%"
+			if moreFlagsBeforeExtracting && len(startFlagValues) > 1 {
+				startIndexLookup += 1
+			}
+		} else {
+			moreFlagsBeforeExtracting = false
+		}
+		if !common.IsFormationNumber(value) && !moreFlagsBeforeExtracting && startIndexLookup == len(startFlagValues) {
+			if len(homeFormation) == 11 && len(awayFormation) == 11 {
+				break
+			}
+			if len(homeFormation) < 11 {
+				homeFormation = append(homeFormation, *newPlayer(value))
+			} else {
+				awayFormation = append(awayFormation, *newPlayer(value))
+			}
+		}
+	}
+	return homeFormation, awayFormation
+}
+
+func extractSubstituteDataElement(elements []string, startFlag string) ([]domain.Player, []domain.Player) {
+	var index = -1
+	homeSubstituteFormation := make([]domain.Player, 0)
+	awaySubstituteFormation := make([]domain.Player, 0)
+
+	for _, value := range elements {
+		if index == 19 {
+			break
+		}
+
+		if value == startFlag || index == 0 {
+			index += 1
+		}
+
+		if index > 0 {
+			index += 1
+			if index%2 != 0 {
+				awaySubstituteFormation = append(awaySubstituteFormation, *newPlayer(value))
+			} else {
+				homeSubstituteFormation = append(homeSubstituteFormation, *newPlayer(value))
+			}
+		}
+	}
+	return homeSubstituteFormation, awaySubstituteFormation
+}
+
+func normalizeCommentary(rawCommentary []string) []*domain.Commentary {
+	var comment string
+	var commentaries = make([]*domain.Commentary, 0)
+
+	for _, value := range rawCommentary {
+		if comment != "" {
+			commentary := domain.Commentary{
+				Time:    value,
+				Comment: comment,
+			}
+			commentaries = append(commentaries, &commentary)
+			comment = ""
+		} else {
+			comment = value
+		}
+	}
 	return commentaries
 }
 
-func reverse(list *[]*domain.Commentary) {
+//func reverse(list *[]*domain.Commentary) {
+func reverse(list *[]string) {
 	for i := 0; i < len(*list)/2; i++ {
 		j := len(*list) - i - 1
 		(*list)[i], (*list)[j] = (*list)[j], (*list)[i]

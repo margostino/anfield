@@ -25,23 +25,28 @@ type LoggerConfig struct {
 }
 
 type ScrapperConfig struct {
-	Url                  string `yaml:"url"`
-	ResultsPath          string `yaml:"resultsPath"`
-	FixturesPath         string `yaml:"fixturesPath"`
-	MatchRowsSelector    string `yaml:"matchRowsSelector"`
-	HrefPattern          string `yaml:"hrefPattern"`
-	MoreCommentsSelector string `yaml:"moreCommentsSelector"`
-	CommentarySelector   string `yaml:"commentarySelector"`
-	CommentaryParams     string `yaml:"commentaryParams"`
-	InfoSelector         string `yaml:"infoSelector"`
-	InfoParams           string `yaml:"infoParams"`
-	HomeSelector         string `yaml:"homeSelector"`
-	HomeTeamSelector     string `yaml:"homeTeamSelector"`
-	AwaySelector         string `yaml:"awaySelector"`
-	AwayTeamSelector     string `yaml:"awayTeamSelector"`
-	SubstituteSelector   string `yaml:"substituteSelector"`
-	LineupsParams        string `yaml:"lineupsParams"`
-	UrlProperty          string `yaml:"urlProperty"`
+	Url                      string `yaml:"url"`
+	ResultsPath              string `yaml:"resultsPath"`
+	FixturesPath             string `yaml:"fixturesPath"`
+	MatchRowsSelector        string `yaml:"matchRowsSelector"`
+	HrefPattern              string `yaml:"hrefPattern"`
+	MoreCommentsSelector     string `yaml:"moreCommentsSelector"`
+	MoreCommentsTextSelector string `yaml:"moreCommentsTextSelector"`
+	CommentarySelector       string `yaml:"commentarySelector"`
+	CommentaryParams         string `yaml:"commentaryParams"`
+	InfoSelector             string `yaml:"infoSelector"`
+	InfoParams               string `yaml:"infoParams"`
+	LineupsSelector          string `yaml:"lineupsSelector"`
+	HomeTeamSelector         string `yaml:"homeTeamSelector"`
+	AwaySelector             string `yaml:"awaySelector"`
+	AwayTeamSelector         string `yaml:"awayTeamSelector"`
+	SubstituteSelector       string `yaml:"substituteSelector"`
+	LineupsParams            string `yaml:"lineupsParams"`
+	UrlProperty              string `yaml:"urlProperty"`
+	CommentaryStartFlag      string `yaml:"commentaryStartFlag"`
+	CommentaryEndFlag        string `yaml:"commentaryEndFlag"`
+	LineupStartFlag          string `yaml:"lineupStartFlag"`
+	SubstitutesStartFlag     string `yaml:"substitutesStartFlag"`
 }
 
 type SourceConfig struct {
