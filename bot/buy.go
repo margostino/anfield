@@ -77,7 +77,7 @@ func (b Buy) reply(update *tgbotapi.Update) (interface{}, string, bufferEnabled)
 			"💰   Total: %.2f",
 			common.UTC(trade.Transaction.Timestamp),
 			trade.Transaction.Operation,
-			trade.Transaction.AssetId,
+			common.Mask(trade.Transaction.AssetId),
 			trade.Transaction.Units,
 			trade.Transaction.Value,
 			-1*trade.Total,

@@ -76,8 +76,8 @@ test.api:
 test.resiliency:
 #TODO
 
-.PHONY: docker.run.all
-#TODO
+.PHONY: dependencies
+dependencies: docker.run.dependencies
 
 .PHONY: docker.run.dependencies
 docker.run.dependencies: d.compose.down

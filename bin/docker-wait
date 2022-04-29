@@ -42,4 +42,4 @@ docker_validate(){
 sleep 5
 docker_wait_until_healthy_or_none 0 15
 docker_validate
-docker_wait_replica 5
+#docker_wait_replica 5

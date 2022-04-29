@@ -182,3 +182,9 @@ func HashFrom(seed string) string {
 func Now() time.Time {
 	return time.Now().UTC()
 }
+
+func Mask(s string) string {
+	prefix := s[:4]
+	suffix := s[len(s)-4:]
+	return prefix + "****" + suffix
+}
