@@ -8,4 +8,4 @@ This first iteration includes:
 - **Batch consumer** to ingest every commentary of matches into the system and store them in a file.
 - **Telegram Bot Server** to subscribe to custom matches updates about players, teams, etc.
 
-More info coming soon...
+Checkout [this](https://margostino.com/you-will-never-walk-alone/) to deep dive into Anfield's soul 😉
